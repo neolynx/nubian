@@ -27,6 +27,29 @@ if [ $? -ne 0 ]; then
 fi
 rm -f ${pkg}.nupkg
 
+mkdir deb
+cd deb
+
+FOLDER="none"
+
+if [ -d "../lib/Net461" ]; then
+  FOLDER="Net461"
+elif [ -d "../lib/Net452" ]; then
+  FOLDER="Net452"
+elif [ -d "../lib/Net451" ]; then
+  FOLDER="Net451"
+elif [ -d "../lib/Net45" ]; then
+  FOLDER="Net45"
+fi
+
+if [ "$FOLDER" = "none" ]; then
+  echo "Could not find usable framework folder"
+  exit 1
+fi
+
+echo "Copying files in ../lib/$FOLDER"
+cp ../lib/$FOLDER/*.* ./
+
 echo "* Creating git repo ..."
 git init . >/dev/null
 git add .
