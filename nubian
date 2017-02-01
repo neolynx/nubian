@@ -3,19 +3,21 @@
 SERVER=https://www.nuget.org/api/v2/package
 
 if [ -z "$1" ]; then
-  echo "Usage: $0 <nuget name>" >&2
-  echo "  i.e. $0 NEventStore"
+  echo "Usage: $0 <nuget id> <version>" >&2
+  echo "  e.g. $0 NEventStore 5.2.0"
   exit 1
 fi
 pkg="$1"
+version="$2"
+pkgurl="$SERVER/$pkg/$version"
 
 echo Creating debian package of $pkg
 dir=`mktemp -d`
 cd $dir
 echo "* Working dir: $dir"
 
-echo "* Downloading and extracting $SERVER/$pkg ..."
-wget -q -O ${pkg}.nupkg $SERVER/$pkg
+echo "* Downloading and extracting $pkgurl ..."
+wget -q -O ${pkg}.nupkg $pkgurl
 if [ $? -ne 0 ]; then
   echo "\nError downloading $SERVER/$pkg" >&2
   exit 1
@@ -34,12 +36,24 @@ FOLDER="none"
 
 if [ -d "../lib/Net461" ]; then
   FOLDER="Net461"
+elif [ -d "../lib/net461" ]; then
+  FOLDER="net461"
 elif [ -d "../lib/Net452" ]; then
   FOLDER="Net452"
+elif [ -d "../lib/net452" ]; then
+  FOLDER="net452"
 elif [ -d "../lib/Net451" ]; then
   FOLDER="Net451"
+elif [ -d "../lib/net451" ]; then
+  FOLDER="net451"
 elif [ -d "../lib/Net45" ]; then
   FOLDER="Net45"
+elif [ -d "../lib/net45" ]; then
+  FOLDER="net45"
+elif [ -d "../lib/Net40" ]; then
+  FOLDER="Net40"
+elif [ -d "../lib/net40" ]; then
+  FOLDER="net40"
 fi
 
 if [ "$FOLDER" = "none" ]; then
@@ -47,8 +61,10 @@ if [ "$FOLDER" = "none" ]; then
   exit 1
 fi
 
+mkdir -p opt/mono/$pkg.$version
+
 echo "Copying files in ../lib/$FOLDER"
-cp ../lib/$FOLDER/*.* ./
+cp ../lib/$FOLDER/*.* ./opt/mono/$pkg.$version
 
 echo "* Creating git repo ..."
 git init . >/dev/null
