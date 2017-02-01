@@ -1,0 +1,5 @@
+*.suo
+*.cache
+packages
+[Bb]in
+[Oo]bj
