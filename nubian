@@ -1,0 +1,46 @@
+#!/bin/sh
+
+SERVER=https://www.nuget.org/api/v2/package
+
+if [ -z "$1" ]; then
+  echo "Usage: $0 <nuget name>" >&2
+  echo "  i.e. $0 NEventStore"
+  exit 1
+fi
+pkg="$1"
+
+echo Creating debian package of $pkg
+dir=`mktemp -d`
+cd $dir
+echo "* Working dir: $dir"
+
+echo "* Downloading and extracting $SERVER/$pkg ..."
+wget -q -O ${pkg}.nupkg $SERVER/$pkg
+if [ $? -ne 0 ]; then
+  echo "\nError downloading $SERVER/$pkg" >&2
+  exit 1
+fi
+unzip -q ${pkg}.nupkg
+if [ $? -ne 0 ]; then
+  echo "\nError unzipping ${pkg}.nupkg" >&2
+  exit 1
+fi
+rm -f ${pkg}.nupkg
+
+echo "* Creating git repo ..."
+git init . >/dev/null
+git add .
+git commit -m "import $SERVER/$pkg" >/dev/null
+
+echo "* Creating debian files ..."
+mkdir -p debian/source
+echo "3.0 (git)" > debian/source/format
+
+echo TODO
+
+git add debian
+git commit -m "debianize" >/dev/null
+
+echo "* Building debian package ..."
+echo TODO
+cd - >/dev/null
