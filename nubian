@@ -1,85 +1,179 @@
 #!/bin/sh
 
+set -e
+
 SERVER=https://www.nuget.org/api/v2/package
 
-if [ -z "$1" ]; then
-  echo "Usage: $0 <nuget id> <version>" >&2
-  echo "  e.g. $0 NEventStore 5.2.0"
+usage()
+{
+  echo "Usage: $0 package NUGET_ID [VERSION]" >&2
+  echo "       $0 restore"
+  echo "  e.g. $0 package NEventStore 5.2.0"
   exit 1
+}
+
+action=$1
+if [ -z "$action" ]; then
+  usage
 fi
-pkg="$1"
-version="$2"
-pkgurl="$SERVER/$pkg/$version"
+shift
 
-echo Creating debian package of $pkg
-dir=`mktemp -d`
-cd $dir
-echo "* Working dir: $dir"
+nubian_package()
+{
+  pkg="$1"
+  version="$2"
 
-echo "* Downloading and extracting $pkgurl ..."
-wget -q -O ${pkg}.nupkg $pkgurl
-if [ $? -ne 0 ]; then
-  echo "\nError downloading $SERVER/$pkg" >&2
-  exit 1
-fi
-unzip -q ${pkg}.nupkg
-if [ $? -ne 0 ]; then
-  echo "\nError unzipping ${pkg}.nupkg" >&2
-  exit 1
-fi
-rm -f ${pkg}.nupkg
+  if [ -z "$pkg" ]; then
+    echo Error: Please specify a NUGET_ID
+    usage
+  fi
 
-mkdir deb
-cd deb
+  echo Creating debian package of $pkg $version
+  home=`pwd`
+  dir=`mktemp -d`
+  cd $dir
+  echo "* Working dir: $dir"
 
-FOLDER="none"
+  if [ -n "$version" ]; then
+    pkgurl="$SERVER/$pkg/$version"
+    pkgname="$pkg-$version"
+  else
+    pkgurl="$SERVER/$pkg"
+    pkgname="$pkg"
+  fi
 
-if [ -d "../lib/Net461" ]; then
-  FOLDER="Net461"
-elif [ -d "../lib/net461" ]; then
-  FOLDER="net461"
-elif [ -d "../lib/Net452" ]; then
-  FOLDER="Net452"
-elif [ -d "../lib/net452" ]; then
-  FOLDER="net452"
-elif [ -d "../lib/Net451" ]; then
-  FOLDER="Net451"
-elif [ -d "../lib/net451" ]; then
-  FOLDER="net451"
-elif [ -d "../lib/Net45" ]; then
-  FOLDER="Net45"
-elif [ -d "../lib/net45" ]; then
-  FOLDER="net45"
-elif [ -d "../lib/Net40" ]; then
-  FOLDER="Net40"
-elif [ -d "../lib/net40" ]; then
-  FOLDER="net40"
-fi
+  echo "* Downloading and extracting $pkgurl ..."
+  mkdir pkg
+  wget -q -O pkg/${pkgname}.nupkg $pkgurl
+  if [ $? -ne 0 ]; then
+    echo "\nError downloading $pkgurl" >&2
+    exit 1
+  fi
+  cd pkg
+  unzip -q ${pkgname}.nupkg
+  if [ $? -ne 0 ]; then
+    echo "\nError unzipping `pwd`/${pkgname}.nupkg" >&2
+    exit 1
+  fi
+  cd ..
 
-if [ "$FOLDER" = "none" ]; then
-  echo "Could not find usable framework folder"
-  exit 1
-fi
+  # why this needed?
+  #FOLDER=""
+  #if [ -d "lib/Net461" ]; then
+    #FOLDER="Net461"
+  #elif [ -d "lib/net461" ]; then
+    #FOLDER="net461"
+  #elif [ -d "lib/Net452" ]; then
+    #FOLDER="Net452"
+  #elif [ -d "lib/net452" ]; then
+    #FOLDER="net452"
+  #elif [ -d "lib/Net451" ]; then
+    #FOLDER="Net451"
+  #elif [ -d "lib/net451" ]; then
+    #FOLDER="net451"
+  #elif [ -d "lib/Net45" ]; then
+    #FOLDER="Net45"
+  #elif [ -d "lib/net45" ]; then
+    #FOLDER="net45"
+  #elif [ -d "lib/Net40" ]; then
+    #FOLDER="Net40"
+  #elif [ -d "lib/net40" ]; then
+    #FOLDER="net40"
+  #fi
 
-mkdir -p opt/mono/$pkg.$version
+  #if [ -z "$FOLDER" ]; then
+    #echo "Could not find usable framework folder"
+    #exit 1
+  #fi
 
-echo "Copying files in ../lib/$FOLDER"
-cp ../lib/$FOLDER/*.* ./opt/mono/$pkg.$version
+  # trying to map the following strucure:
+  # packages
+  # └── NEventStore.5.2.0
+  #     ├── lib
+  #     │   └── net40
+  #     │       ├── NEventStore.dll
+  #     │       ├── NEventStore.pdb
+  #     │       └── NEventStore.xml
+  #     └── NEventStore.5.2.0.nupkg
 
-echo "* Creating git repo ..."
-git init . >/dev/null
-git add .
-git commit -m "import $SERVER/$pkg" >/dev/null
+  echo "* Copying files ..."
+  set -x
+  mkdir -p opt/mono/$pkg.$version
+  cp -r pkg/lib opt/mono/$pkg.$version/
+  cp pkg/${pkgname}.nupkg opt/mono/$pkg.$version/$pkg.$version.nupkg
 
-echo "* Creating debian files ..."
-mkdir -p debian/source
-echo "3.0 (git)" > debian/source/format
+  #echo "* Creating git repo ..."
+  #git init . >/dev/null
+  #git add .
+  #git commit -m "import $SERVER/$pkg" >/dev/null
 
-echo TODO
+  debname=`echo $pkg | tr A-Z a-z`
+  echo "* Creating debian files ..."
+  mkdir -p debian/source
+  echo "3.0 (git)" > debian/source/format
+  echo "9" > debian/compat
+  cat >debian/control <<EOF
+Source: $debname
+Section: devel
+Priority: optional
+Maintainer: `git config user.name` <`git config user.email`>
+Homepage: $pkgurl
+Standards-Version: 3.9.6
 
-git add debian
-git commit -m "debianize" >/dev/null
+Package: $debname
+Architecture: all
+Description: Debian package for $pkgname nuget
+ $pkgname was packages by nubian.
+EOF
+  cat >debian/changelog <<EOF
+$debname (0.0.0.0) unstable; urgency=medium
 
-echo "* Building debian package ..."
-echo TODO
-cd - >/dev/null
+  * debianized by nubian
+
+ -- `git config user.name` <`git config user.email`>  `date -R`
+EOF
+
+  cat >debian/rules <<EOF
+#!/usr/bin/make -f
+
+%:
+	dh \$@
+EOF
+  chmod +x debian/rules
+
+  cat >debian/install <<EOF
+#! /usr/bin/dh-exec
+
+opt
+EOF
+
+  #git add debian
+  #git commit -m "debianize" >/dev/null
+
+  echo "* Building debian package ..."
+
+  debuild -uc -us -b
+
+  cp ../${debname}_0.0.0.0_all.deb $home/
+  echo Package ${debname}_0.0.0.0_all.deb is ready
+  cd $home
+}
+
+nubian_restore()
+{
+  echo Not implemented yet
+}
+
+case $action in
+  package)
+    nubian_package $@
+    ;;
+  restore)
+    nubian_restore $@
+    ;;
+  *)
+    echo "Unknown action: $action"
+    usage
+    ;;
+esac
+
