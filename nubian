@@ -21,21 +21,21 @@ shift
 nubian_package()
 {
   pkg="$1"
-  version="$2"
+  pkgver="$2"
 
   if [ -z "$pkg" ]; then
     echo Error: Please specify a NUGET_ID
     usage
   fi
 
-  echo Creating debian package of $pkg $version
+  echo Creating debian package of $pkg $pkgver
   home=`pwd`
   dir=`mktemp -d`
   cd $dir
   echo "* Working dir: $dir"
 
-  if [ -n "$version" ]; then
-    pkgurl="$SERVER/$pkg/$version"
+  if [ -n "$pkgver" ]; then
+    pkgurl="$SERVER/$pkg/$pkgver"
     pkgname="$pkg-$version"
   else
     pkgurl="$SERVER/$pkg"
@@ -56,6 +56,18 @@ nubian_package()
     exit 1
   fi
   cd ..
+
+  eval `xmlstarlet sel -N x="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd" -t \
+    -o 'nuget_version="'     -v "/x:package/x:metadata/x:version"     -o '" ' \
+    -o 'nuget_url="'         -v "/x:package/x:metadata/x:projectUrl"  -o '" ' \
+    -o 'nuget_description="' -v "/x:package/x:metadata/x:description" -o '" ' \
+    -o 'nuget_summary="'      -v "/x:package/x:metadata/x:summary"     -o '" ' \
+    <pkg/$pkg.nuspec`
+
+  echo "* Nuget version:     $nuget_version"
+  echo "* Nuget summary:     $nuget_summary"
+  echo "* Nuget description: $nuget_description"
+  echo "* Nuget url:         $nuget_url"
 
   # why this needed?
   #FOLDER=""
@@ -97,10 +109,9 @@ nubian_package()
   #     └── NEventStore.5.2.0.nupkg
 
   echo "* Copying files ..."
-  set -x
-  mkdir -p opt/mono/$pkg.$version
-  cp -r pkg/lib opt/mono/$pkg.$version/
-  cp pkg/${pkgname}.nupkg opt/mono/$pkg.$version/$pkg.$version.nupkg
+  mkdir -p opt/mono/$pkg.$nuget_version
+  cp -r pkg/lib opt/mono/$pkg.$nuget_version/
+  cp pkg/${pkgname}.nupkg opt/mono/$pkg.$nuget_version/$pkg.$nuget_version.nupkg
 
   #echo "* Creating git repo ..."
   #git init . >/dev/null
@@ -117,16 +128,16 @@ Source: $debname
 Section: devel
 Priority: optional
 Maintainer: `git config user.name` <`git config user.email`>
-Homepage: $pkgurl
+Homepage: $nuget_url
 Standards-Version: 3.9.6
 
 Package: $debname
 Architecture: all
-Description: Debian package for $pkgname nuget
- $pkgname was packages by nubian.
+Description: $nuget_summary
+ $nuget_description
 EOF
   cat >debian/changelog <<EOF
-$debname (0.0.0.0) unstable; urgency=medium
+$debname ($nuget_version) unstable; urgency=medium
 
   * debianized by nubian
 
@@ -135,7 +146,6 @@ EOF
 
   cat >debian/rules <<EOF
 #!/usr/bin/make -f
-
 %:
 	dh \$@
 EOF
@@ -143,7 +153,6 @@ EOF
 
   cat >debian/install <<EOF
 #! /usr/bin/dh-exec
-
 opt
 EOF
 
@@ -154,9 +163,10 @@ EOF
 
   debuild -uc -us -b
 
-  cp ../${debname}_0.0.0.0_all.deb $home/
-  echo Package ${debname}_0.0.0.0_all.deb is ready
+  cp ../${debname}_${nuget_version}_all.deb $home/
+  echo Package ${debname}_${nuget_version}_all.deb is ready
   cd $home
+  rm -rf $dir
 }
 
 nubian_restore()
