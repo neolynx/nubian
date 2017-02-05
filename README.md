@@ -16,6 +16,7 @@ make
 
 ## TODO
 
-* Handle versions
-* Handle dependencies
+* Get version from nupkg
+* Handle nuget dependencies
 * Try to use FrameworkPath instead of link
+* Runtime packages
