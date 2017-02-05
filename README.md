@@ -17,6 +17,7 @@ make
 ## TODO
 
 * Get version from nupkg
+* Try nuget local repo: https://wiki.debian.org/Teams/DebianMonoGroup/NuGet
 * Handle nuget dependencies
 * Try to use FrameworkPath instead of link
 * Runtime packages
