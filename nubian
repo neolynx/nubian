@@ -24,19 +24,21 @@ package_not_installed()
 
 if package_not_installed devscripts ; then
   echo "Please install devscripts"
-  echo "sudo apt-get install devscripts"
   exit 1
 fi
 
 if package_not_installed debhelper ; then
   echo "Please install debhelper"
-  echo "sudo apt-get install debhelper"
   exit 1
 fi
 
 if package_not_installed fakeroot ; then
   echo "Please install fakeroot"
-  echo "sudo apt-get install fakeroot"
+  exit 1
+fi
+
+if package_not_installed xmlstarlet ; then
+  echo "Please install xmlstarlet"
   exit 1
 fi
 
@@ -96,35 +98,6 @@ nubian_package()
   echo "* Nuget summary:     $nuget_summary"
   echo "* Nuget description: $nuget_description"
   echo "* Nuget url:         $nuget_url"
-
-  # why this needed?
-  #FOLDER=""
-  #if [ -d "lib/Net461" ]; then
-    #FOLDER="Net461"
-  #elif [ -d "lib/net461" ]; then
-    #FOLDER="net461"
-  #elif [ -d "lib/Net452" ]; then
-    #FOLDER="Net452"
-  #elif [ -d "lib/net452" ]; then
-    #FOLDER="net452"
-  #elif [ -d "lib/Net451" ]; then
-    #FOLDER="Net451"
-  #elif [ -d "lib/net451" ]; then
-    #FOLDER="net451"
-  #elif [ -d "lib/Net45" ]; then
-    #FOLDER="Net45"
-  #elif [ -d "lib/net45" ]; then
-    #FOLDER="net45"
-  #elif [ -d "lib/Net40" ]; then
-    #FOLDER="Net40"
-  #elif [ -d "lib/net40" ]; then
-    #FOLDER="net40"
-  #fi
-
-  #if [ -z "$FOLDER" ]; then
-    #echo "Could not find usable framework folder"
-    #exit 1
-  #fi
 
   # trying to map the following strucure:
   # packages
