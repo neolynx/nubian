@@ -12,6 +12,34 @@ usage()
   exit 1
 }
 
+package_not_installed()
+{
+  if [ $(dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -c "ok installed") -eq 1 ]; then
+    return 1
+  fi
+  return 0
+}
+
+# Script dependecy checks
+
+if package_not_installed devscripts ; then
+  echo "Please install devscripts"
+  echo "sudo apt-get install devscripts"
+  exit 1
+fi
+
+if package_not_installed debhelper ; then
+  echo "Please install debhelper"
+  echo "sudo apt-get install debhelper"
+  exit 1
+fi
+
+if package_not_installed fakeroot ; then
+  echo "Please install fakeroot"
+  echo "sudo apt-get install fakeroot"
+  exit 1
+fi
+
 action=$1
 if [ -z "$action" ]; then
   usage
