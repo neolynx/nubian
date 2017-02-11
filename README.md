@@ -1,26 +1,28 @@
 # nubian - debianize nuget packages
 
-Prerequisites:
+##Prerequisites
 
 ```
 $ sudo apt install devscripts debhelper fakeroot xmlstarlet
 ```
 
-Download and package:
+## Debianize a nuget package
 ```
 $ ./nubian package NEventStore 5.2.0
 ```
-Install:
+
+## Install nupkg
 ```
 $ sudo dpkg -i nupkg-neventstore_5.2.0_all.deb
 ```
-Build project:
+
+## Build project
 ```
 $ cd src/nubian.Demo/
 $ make
 ```
 
-Package info:
+## Package info
 ```
 $ dpkg -I nupkg-neventstore_5.2.0_all.deb
  new debian package, version 2.0.
@@ -54,7 +56,7 @@ drwxr-xr-x root/root         0 2017-02-11 18:22 ./usr/share/doc/nupkg-neventstor
 -rw-r--r-- root/root       154 2017-02-11 18:22 ./usr/share/doc/nupkg-neventstore/changelog.gz
 ```
 
-Install nupkg:
+## Install nupkg
 ```
 $ sudo dpkg -i nupkg-neventstore_5.2.0_all.deb
 Selecting previously unselected package nupkg-neventstore.
@@ -64,7 +66,7 @@ Unpacking nupkg-neventstore (5.2.0) ...
 Setting up nupkg-neventstore (5.2.0) ...
 ```
 
-Build and package demo app:
+## Build and package demo app
 ```
 $ cd src/nubian.Demo/
 .../nubian.Demo (master)$ debuild -us -us -b
