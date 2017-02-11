@@ -110,16 +110,18 @@ nubian_package()
   #     └── NEventStore.5.2.0.nupkg
 
   echo "* Copying files ..."
-  mkdir -p opt/mono/$pkg.$nuget_version
-  cp -r pkg/lib opt/mono/$pkg.$nuget_version/
-  cp pkg/${pkgname}.nupkg opt/mono/$pkg.$nuget_version/$pkg.$nuget_version.nupkg
+#  mkdir -p opt/mono/$pkg.$nuget_version
+#  cp -r pkg/lib opt/mono/$pkg.$nuget_version/
+#  cp pkg/${pkgname}.nupkg opt/mono/$pkg.$nuget_version/$pkg.$nuget_version.nupkg
+  mkdir -p usr/share/nupkg/
+  cp pkg/${pkgname}.nupkg usr/share/nupkg/$pkg.$nuget_version.nupkg
 
   #echo "* Creating git repo ..."
   #git init . >/dev/null
   #git add .
   #git commit -m "import $SERVER/$pkg" >/dev/null
 
-  debname=`echo $pkg | tr A-Z a-z`
+  debname=nupkg-`echo $pkg | tr A-Z a-z`
   echo "* Creating debian files ..."
   mkdir -p debian/source
   echo "3.0 (git)" > debian/source/format
@@ -154,7 +156,7 @@ EOF
 
   cat >debian/install <<EOF
 #! /usr/bin/dh-exec
-opt
+usr
 EOF
 
   #git add debian
@@ -175,12 +177,33 @@ nubian_restore()
   echo Not implemented yet
 }
 
+nubian_nuget_localonly()
+{
+  cat >~/.config/NuGet/NuGet.Config <<EOF
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="https://www.nuget.org/api/v2/" value="https://www.nuget.org/api/v2/" />
+    <add key="DebianLocal" value="file:///usr/share/nupkg" />
+  </packageSources>
+  <disabledPackageSources>
+    <add key="https://www.nuget.org/api/v2/" value="true" />
+  </disabledPackageSources>
+</configuration>
+EOF
+  rm -rf ~/.local/share/NuGet/Cache/
+}
+
+nubian_nuget_nolocal()
+{
+  rm -f ~/.config/NuGet/NuGet.Config
+  rm -rf ~/.local/share/NuGet/Cache/
+}
+
 case $action in
-  package)
-    nubian_package $@
-    ;;
-  restore)
-    nubian_restore $@
+  package|nuget-localonly|nuget-nolocal)
+    action=`echo $action | tr - _`
+    nubian_$action $@
     ;;
   *)
     echo "Unknown action: $action"

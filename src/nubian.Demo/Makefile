@@ -1,10 +1,12 @@
 
 all:
-	rm -rf packages
-	ln -s /opt/mono packages
+	../../nubian nuget-localonly
+	nuget restore -PackagesDirectory packages/
 	xbuild
+	../../nubian nuget-nolocal
 
 
 clean:
-	rm -f packages
 	xbuild /t:Clean
+	rm -rf packages/
+	../../nubian nuget-nolocal
