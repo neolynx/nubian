@@ -122,6 +122,8 @@ nubian_package()
   #git commit -m "import $SERVER/$pkg" >/dev/null
 
   debname=nupkg-`echo $pkg | tr A-Z a-z`
+  nuget_summary=`echo $nuget_summary | fmt --width=80 | sed 's/^/ /'`
+  nuget_description=`echo $nuget_description | fmt --width=80 | sed 's/^/ /'`
   echo "* Creating debian files ..."
   mkdir -p debian/source
   echo "3.0 (git)" > debian/source/format
@@ -136,8 +138,9 @@ Standards-Version: 3.9.6
 
 Package: $debname
 Architecture: all
-Description: $nuget_summary
- $nuget_description
+Description: debianized $pkg nuget package
+$nuget_summary
+$nuget_description
 EOF
   cat >debian/changelog <<EOF
 $debname ($nuget_version) unstable; urgency=medium

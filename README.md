@@ -35,8 +35,13 @@ $ dpkg -I nupkg-neventstore_5.2.0_all.deb
  Section: devel
  Priority: optional
  Homepage: http://neventstore.org
- Description: NEventStore is a persistence agnostic event sourcing library for .NET. The primary use is most often associated with CQRS.
-  The purpose of the EventStore is to represent a series of events as a stream. Furthermore, it provides hooks whereby any events committed to the stream can be dispatched to interested parties.
+ Description: debianized NEventStore nuget package
+  NEventStore is a persistence agnostic event sourcing library for .NET. The
+  primary use is most often associated with CQRS.
+  The purpose of the EventStore is to represent a series of events as a
+  stream. Furthermore, it provides hooks whereby any events committed to the
+  stream can be dispatched to interested parties.
+
 
 $ dpkg -c nupkg-neventstore_5.2.0_all.deb
 drwxr-xr-x root/root         0 2017-02-11 18:22 ./
@@ -53,4 +58,3 @@ drwxr-xr-x root/root         0 2017-02-11 18:22 ./usr/share/doc/nupkg-neventstor
 
 * Handle nuget dependencies
 * Generate run-time packages
-* Sanitize debian/control line lenghts
