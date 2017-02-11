@@ -1,0 +1,13 @@
+Source: nubian-demo
+Section: misc
+Priority: optional
+Maintainer: André Roth <neolynx@gmail.com>
+Build-Depends: debhelper (>= 8)
+Standards-Version: 3.9.3
+
+Package: nubian-demo
+Section: misc
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: nubian demo executable
+ Demo executable for nubian, using NEventStore nupkg

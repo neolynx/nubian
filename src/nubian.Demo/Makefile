@@ -1,3 +1,5 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
 
 all:
 	../../nubian nuget-localonly

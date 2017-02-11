@@ -54,6 +54,26 @@ drwxr-xr-x root/root         0 2017-02-11 18:22 ./usr/share/doc/nupkg-neventstor
 -rw-r--r-- root/root       154 2017-02-11 18:22 ./usr/share/doc/nupkg-neventstore/changelog.gz
 ```
 
+Install nupkg:
+```
+$ sudo dpkg -i nupkg-neventstore_5.2.0_all.deb
+Selecting previously unselected package nupkg-neventstore.
+(Reading database ... 369523 files and directories currently installed.)
+Preparing to unpack nupkg-neventstore_5.2.0_all.deb ...
+Unpacking nupkg-neventstore (5.2.0) ...
+Setting up nupkg-neventstore (5.2.0) ...
+```
+
+Build and package demo app:
+```
+$ cd src/nubian.Demo/
+.../nubian.Demo (master)$ debuild -us -us -b
+[...]
+```
+Note: this will remove any local nuget configuration
+
+
+
 ## TODO
 
 * Handle nuget dependencies
