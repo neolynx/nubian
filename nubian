@@ -25,6 +25,9 @@ if package_not_installed nubian-nuget ; then
   exit 1
 fi
 
+  exit 1
+fi
+
 if package_not_installed devscripts ; then
   echo "Please install devscripts"
   exit 1
