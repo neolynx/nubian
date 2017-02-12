@@ -20,6 +20,11 @@ package_not_installed()
 
 # Script dependecy checks
 
+if package_not_installed nubian-nuget ; then
+  echo "Please install nubian-nuget"
+  exit 1
+fi
+
 if package_not_installed nuget ; then
   echo "Please install nuget"
   exit 1
@@ -82,7 +87,7 @@ nubian_package()
   fi
 
   cd pkg
-  unzip -q $pkgname
+  unzip "$pkg.$pkgver/$pkgname" "$pkg.nuspec"
   if [ $? -ne 0 ]; then
     echo "\nError unzipping `pwd`/$pkgname" >&2
     exit 1
@@ -104,7 +109,7 @@ nubian_package()
   echo "* Copying files ..."
 
   mkdir -p usr/share/nupkg/
-  cp pkg/$pkgname usr/share/nupkg/
+  cp "pkg/$pkg.$pkgver/$pkgname" usr/share/nupkg/
 
   #echo "* Creating git repo ..."
   #git init . >/dev/null
