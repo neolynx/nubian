@@ -1,0 +1,5 @@
+#! /usr/bin/dh-exec
+
+nubian-nuget /usr/bin
+NuGet.exe /opt/nubian/nuget
+
