@@ -3,7 +3,7 @@
 ##Prerequisites
 
 ```
-$ sudo apt install devscripts debhelper fakeroot xmlstarlet
+$ sudo apt install devscripts debhelper fakeroot xmlstarlet nubian-nuget
 ```
 
 ## Debianize a nuget package
