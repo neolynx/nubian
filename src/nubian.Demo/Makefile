@@ -2,13 +2,10 @@
 # -*- makefile -*-
 
 all:
-	../../nubian nuget-localonly
-	nuget restore -PackagesDirectory packages/
+	nuget restore -Source /usr/share/nupkg -PackagesDirectory packages/
 	xbuild
-	../../nubian nuget-nolocal
 
 
 clean:
 	xbuild /t:Clean
 	rm -rf packages/
-	../../nubian nuget-nolocal

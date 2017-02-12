@@ -2,8 +2,6 @@
 
 set -e
 
-SERVER=https://www.nuget.org/api/v2/package
-
 usage()
 {
   echo "Usage: $0 package NUGET_ID [VERSION]" >&2
@@ -22,6 +20,10 @@ package_not_installed()
 
 # Script dependecy checks
 
+if package_not_installed nuget ; then
+  echo "Please install nuget"
+  exit 1
+fi
 if package_not_installed devscripts ; then
   echo "Please install devscripts"
   exit 1
@@ -52,9 +54,15 @@ nubian_package()
 {
   pkg="$1"
   pkgver="$2"
+  pkgname="$1.$2.nupkg"
 
   if [ -z "$pkg" ]; then
     echo Error: Please specify a NUGET_ID
+    usage
+  fi
+
+  if [ -z "$pkgver" ]; then
+    echo Error: Please specify a package version
     usage
   fi
 
@@ -64,25 +72,19 @@ nubian_package()
   cd $dir
   echo "* Working dir: $dir"
 
-  if [ -n "$pkgver" ]; then
-    pkgurl="$SERVER/$pkg/$pkgver"
-    pkgname="$pkg-$version"
-  else
-    pkgurl="$SERVER/$pkg"
-    pkgname="$pkg"
-  fi
-
-  echo "* Downloading and extracting $pkgurl ..."
+  echo "* Downloading and extracting $pkg $pkgver ..."
   mkdir pkg
-  wget -q -O pkg/${pkgname}.nupkg $pkgurl
+  nuget install $pkg -Version $pkgver -OutputDirectory pkg/
+  #  wget -q -O pkg/${pkgname}.nupkg $pkgurl
   if [ $? -ne 0 ]; then
     echo "\nError downloading $pkgurl" >&2
     exit 1
   fi
+
   cd pkg
-  unzip -q ${pkgname}.nupkg
+  unzip -q $pkgname
   if [ $? -ne 0 ]; then
-    echo "\nError unzipping `pwd`/${pkgname}.nupkg" >&2
+    echo "\nError unzipping `pwd`/$pkgname" >&2
     exit 1
   fi
   cd ..
@@ -99,27 +101,15 @@ nubian_package()
   echo "* Nuget description: $nuget_description"
   echo "* Nuget url:         $nuget_url"
 
-  # trying to map the following strucure:
-  # packages
-  # └── NEventStore.5.2.0
-  #     ├── lib
-  #     │   └── net40
-  #     │       ├── NEventStore.dll
-  #     │       ├── NEventStore.pdb
-  #     │       └── NEventStore.xml
-  #     └── NEventStore.5.2.0.nupkg
-
   echo "* Copying files ..."
-#  mkdir -p opt/mono/$pkg.$nuget_version
-#  cp -r pkg/lib opt/mono/$pkg.$nuget_version/
-#  cp pkg/${pkgname}.nupkg opt/mono/$pkg.$nuget_version/$pkg.$nuget_version.nupkg
+
   mkdir -p usr/share/nupkg/
-  cp pkg/${pkgname}.nupkg usr/share/nupkg/$pkg.$nuget_version.nupkg
+  cp pkg/$pkgname usr/share/nupkg/
 
   #echo "* Creating git repo ..."
   #git init . >/dev/null
   #git add .
-  #git commit -m "import $SERVER/$pkg" >/dev/null
+  #git commit -m "import $pkgname" >/dev/null
 
   debname=nupkg-`echo $pkg | tr A-Z a-z`
   nuget_summary=`echo $nuget_summary | fmt --width=80 | sed 's/^/ /'`
@@ -139,8 +129,8 @@ Standards-Version: 3.9.6
 Package: $debname
 Architecture: all
 Description: debianized $pkg nuget package
-$nuget_summary
-$nuget_description
+ $nuget_summary
+ $nuget_description
 EOF
   cat >debian/changelog <<EOF
 $debname ($nuget_version) unstable; urgency=medium
@@ -173,34 +163,6 @@ EOF
   echo Package ${debname}_${nuget_version}_all.deb is ready
   cd $home
   rm -rf $dir
-}
-
-nubian_restore()
-{
-  echo Not implemented yet
-}
-
-nubian_nuget_localonly()
-{
-  cat >~/.config/NuGet/NuGet.Config <<EOF
-<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <packageSources>
-    <add key="https://www.nuget.org/api/v2/" value="https://www.nuget.org/api/v2/" />
-    <add key="DebianLocal" value="file:///usr/share/nupkg" />
-  </packageSources>
-  <disabledPackageSources>
-    <add key="https://www.nuget.org/api/v2/" value="true" />
-  </disabledPackageSources>
-</configuration>
-EOF
-  rm -rf ~/.local/share/NuGet/Cache/
-}
-
-nubian_nuget_nolocal()
-{
-  rm -f ~/.config/NuGet/NuGet.Config
-  rm -rf ~/.local/share/NuGet/Cache/
 }
 
 case $action in
