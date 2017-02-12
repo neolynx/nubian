@@ -9,6 +9,5 @@ Package: nubian-nuget
 Section: misc
 Architecture: all
 Depends: ${misc:Depends}, mono-complete (>=4.6.2)
-Conflcts: nuget
 Description: NuGet command line client for nubian.
  Unofficial release of NuGet client v3.5

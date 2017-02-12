@@ -1,0 +1,16 @@
+#!/usr/bin/make
+# -*- makefile -*-
+
+TARGET := opt/nubian/nuget
+SCRIPTTRG := /usr/bin
+PACKAGE := nubian-nuget
+
+%:
+	dh $@
+
+override_dh_auto_clean:
+	echo Cleaning
+
+override_dh_auto_install:
+	cp NuGet.exe debian/$(PACKAGE)/$(TARGET)/`basename NuGet.exe
+	cp nubian-nuget debian/$(PACKAGE)/$(SCRIPTTRG)/`basename nubian-nuget
