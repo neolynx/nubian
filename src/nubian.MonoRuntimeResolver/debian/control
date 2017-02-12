@@ -1,0 +1,12 @@
+Source: nubian-monoruntimeresolver
+Section: misc
+Priority: optional
+Maintainer: Jacob Reimers <jacob@reimers.dk>
+Build-Depends: debhelper (>= 8)
+Standards-Version: 3.9.3
+
+Package: nubian-monoruntimeresolver
+Section: misc
+Architecture: all
+Depends: ${misc:Depends}, mono-complete (>= 4.6.2)
+Description: Assembly resolver for nubian applications on Mono runtime.

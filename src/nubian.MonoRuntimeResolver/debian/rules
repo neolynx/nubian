@@ -1,0 +1,26 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+TARGET := opt/mono/bin
+PACKAGE := nubian-demo
+BINARY := bin/Release/nubian.MonoRuntimeResolver.exe
+
+%:
+	dh $@
+
+override_dh_auto_clean:
+	xbuild /t:clean
+	rm -rf packages/
+	../../nubian nuget-nolocal
+
+override_dh_auto_build:
+	../../nubian nuget-localonly
+	nuget restore -PackagesDirectory packages/
+	xbuild
+	../../nubian nuget-nolocal
+
+override_dh_auto_install:
+	dh_auto_install
+	mkdir -p debian/$(PACKAGE)/$(TARGET)
+	cp $(BINARY) debian/$(PACKAGE)/$(TARGET)/`basename $(BINARY) | tr A-Z a-z | sed s/.exe$$// | tr '.' '-'`
+
