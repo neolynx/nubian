@@ -1,9 +1,9 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-TARGET := opt/mono/bin
-PACKAGE := nubian-demo
-BINARY := bin/Release/nubian.MonoRuntimeResolver.exe
+TARGET := tmp/nubian
+PACKAGE := nubian-monoruntimeresolver
+BINARY := bin/Release/nubian.MonoRuntimeResolver.dll
 
 %:
 	dh $@
@@ -16,7 +16,7 @@ override_dh_auto_clean:
 override_dh_auto_build:
 	../../nubian nuget-localonly
 	nuget restore -PackagesDirectory packages/
-	xbuild
+	xbuild /p:Configuration=Release
 	../../nubian nuget-nolocal
 
 override_dh_auto_install:
