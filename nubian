@@ -25,9 +25,6 @@ if package_not_installed nubian-nuget ; then
   exit 1
 fi
 
-  exit 1
-fi
-
 if package_not_installed devscripts ; then
   echo "Please install devscripts"
   exit 1
@@ -78,7 +75,7 @@ nubian_package()
 
   echo "* Downloading and extracting $pkg $pkgver ..."
   mkdir pkg
-  nuget install $pkg -Version $pkgver -OutputDirectory pkg/
+  nubian-nuget install $pkg -Version $pkgver -OutputDirectory pkg/
   #  wget -q -O pkg/${pkgname}.nupkg $pkgurl
   if [ $? -ne 0 ]; then
     echo "\nError downloading $pkgurl" >&2
@@ -91,14 +88,13 @@ nubian_package()
     echo "\nError unzipping `pwd`/$pkgname" >&2
     exit 1
   fi
-  cd ..
 
-  eval `xmlstarlet sel -N x="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd" -t \
-    -o 'nuget_version="'     -v "/x:package/x:metadata/x:version"     -o '" ' \
-    -o 'nuget_url="'         -v "/x:package/x:metadata/x:projectUrl"  -o '" ' \
-    -o 'nuget_description="' -v "/x:package/x:metadata/x:description" -o '" ' \
-    -o 'nuget_summary="'      -v "/x:package/x:metadata/x:summary"     -o '" ' \
-    <pkg/$pkg.nuspec`
+  eval `xmlstarlet sel -t \
+    -o 'nuget_version="'     -v "/_:package/_:metadata/_:version"     -o '" ' \
+    -o 'nuget_url="'         -v "/_:package/_:metadata/_:projectUrl"  -o '" ' \
+    -o 'nuget_description="' -v "/_:package/_:metadata/_:description" -o '" ' \
+    -o 'nuget_summary="'      -v "/_:package/_:metadata/_:summary"     -o '" ' \
+    <$pkg.nuspec`
 
   echo "* Nuget version:     $nuget_version"
   echo "* Nuget summary:     $nuget_summary"
@@ -106,7 +102,8 @@ nubian_package()
   echo "* Nuget url:         $nuget_url"
 
   echo "* Copying files ..."
-
+  
+  cd ..
   mkdir -p usr/share/nupkg/
   cp "pkg/$pkg.$pkgver/$pkgname" usr/share/nupkg/
 
