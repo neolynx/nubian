@@ -11,13 +11,9 @@ BINARY := bin/Release/nubian.MonoRuntimeResolver.dll
 override_dh_auto_clean:
 	xbuild /t:clean
 	rm -rf packages/
-	../../nubian nuget-nolocal
 
 override_dh_auto_build:
-	../../nubian nuget-localonly
-	nuget restore -PackagesDirectory packages/
-	xbuild /p:Configuration=Release
-	../../nubian nuget-nolocal
+	xbuild nubian.MonoRuntimeResolver.csproj /p:Configuration=Release
 
 override_dh_auto_install:
 	dh_auto_install
