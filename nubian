@@ -110,18 +110,20 @@ nubian_package()
   #     └── NEventStore.5.2.0.nupkg
 
   echo "* Copying files ..."
-#  mkdir -p opt/mono/$pkg.$nuget_version
-#  cp -r pkg/lib opt/mono/$pkg.$nuget_version/
-#  cp pkg/${pkgname}.nupkg opt/mono/$pkg.$nuget_version/$pkg.$nuget_version.nupkg
+  mkdir deb
+  cd deb
+  mkdir -p opt/mono/4.0
+  cp ../pkg/lib/net40/* opt/mono/4.0
   mkdir -p usr/share/nupkg/
-  cp pkg/${pkgname}.nupkg usr/share/nupkg/$pkg.$nuget_version.nupkg
+  cp ../pkg/${pkgname}.nupkg usr/share/nupkg/$pkg.$nuget_version.nupkg
 
   #echo "* Creating git repo ..."
   #git init . >/dev/null
   #git add .
   #git commit -m "import $SERVER/$pkg" >/dev/null
 
-  debname=nupkg-`echo $pkg | tr A-Z a-z`
+  pkgname=`echo $pkg | tr A-Z a-z`
+  debname=nupkg-$pkgname
   nuget_summary=`echo $nuget_summary | fmt --width=80 | sed 's/^/ /'`
   nuget_description=`echo $nuget_description | fmt --width=80 | sed 's/^/ /'`
   echo "* Creating debian files ..."
@@ -129,7 +131,7 @@ nubian_package()
   echo "3.0 (git)" > debian/source/format
   echo "9" > debian/compat
   cat >debian/control <<EOF
-Source: $debname
+Source: nuget-$pkgname
 Section: devel
 Priority: optional
 Maintainer: `git config user.name` <`git config user.email`>
@@ -141,9 +143,15 @@ Architecture: all
 Description: debianized $pkg nuget package
 $nuget_summary
 $nuget_description
+
+Package: libmono-$pkgname
+Architecture: all
+Description: debianized $pkg nuget DLL
+$nuget_summary
+$nuget_description
 EOF
   cat >debian/changelog <<EOF
-$debname ($nuget_version) unstable; urgency=medium
+nuget-$pkgname ($nuget_version) unstable; urgency=medium
 
   * debianized by nubian
 
@@ -157,9 +165,14 @@ EOF
 EOF
   chmod +x debian/rules
 
-  cat >debian/install <<EOF
+  cat >debian/$debname.install <<EOF
 #! /usr/bin/dh-exec
 usr
+EOF
+
+  cat >debian/libmono-$pkgname.install <<EOF
+#! /usr/bin/dh-exec
+opt
 EOF
 
   #git add debian
@@ -169,8 +182,8 @@ EOF
 
   debuild -uc -us -b
 
-  cp ../${debname}_${nuget_version}_all.deb $home/
-  echo Package ${debname}_${nuget_version}_all.deb is ready
+  cp ../*.deb $home/
+  echo Packages ${debname}_${nuget_version}_all.deb and libmono-${pkgname}_${nuget_version}_all.deb are ready
   cd $home
   rm -rf $dir
 }
