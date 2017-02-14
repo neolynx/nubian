@@ -3,16 +3,18 @@
 case "${1}" in
     configure)
         echo Registering in GAC ...
-        gacutil -i /tmp/nubian/nubian.MonoRuntimeResolver.dll
+        gacutil -i /opt/nubian/gacd/nubian/nubian.MonoRuntimeResolver.dll
 		;;
 
     abort-remove)
+        gacutil -u nubian.MonoRuntimeResolver.dll
         ;;
 
     abort-upgrade)
+        gacutil -u nubian.MonoRuntimeResolver.dll
         ;;
     *)
-        echo "preinst called with unknown argument (${1})"
+        echo "postinst called with unknown argument (${1})"
         exit 1
         ;;
 esac

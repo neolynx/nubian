@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-TARGET := tmp/nubian
+TARGET := opt/nubian/gacd
 PACKAGE := nubian-monoruntimeresolver
 BINARY := bin/Release/nubian.MonoRuntimeResolver.dll
 
