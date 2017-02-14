@@ -3,7 +3,7 @@
 
 TARGET := opt/mono/bin
 PACKAGE := nubian-demo
-BINARY := bin/Debug/nubian.Demo.exe
+BINARY := bin/Release/nubian.Demo.exe
 
 %:
 	dh $@
@@ -11,13 +11,10 @@ BINARY := bin/Debug/nubian.Demo.exe
 override_dh_auto_clean:
 	xbuild /t:clean
 	rm -rf packages/
-	../../nubian nuget-nolocal
 
 override_dh_auto_build:
-	../../nubian nuget-localonly
-	nuget restore -PackagesDirectory packages/
-	xbuild
-	../../nubian nuget-nolocal
+	nubian-nuget restore -PackagesDirectory packages/ -Source /usr/share/nupkg -nocache
+	xbuild nubian.Demo.csproj /p:Configuration=Release
 
 override_dh_auto_install:
 	dh_auto_install

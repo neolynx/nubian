@@ -2,8 +2,8 @@
 # -*- makefile -*-
 
 all:
-	nuget restore -Source /usr/share/nupkg -PackagesDirectory packages/
-	xbuild
+	nubian-nuget restore -Source /usr/share/nupkg -PackagesDirectory packages/ -nocache
+	xbuild nubian.Demo.csproj /p:Configuration=Release
 
 
 clean:

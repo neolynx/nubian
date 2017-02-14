@@ -2,7 +2,7 @@ Source: nubian-demo
 Section: misc
 Priority: optional
 Maintainer: André Roth <neolynx@gmail.com>
-Build-Depends: debhelper (>= 8)
+Build-Depends: debhelper (>= 8), nupkg-neventstore (=5.2.0)
 Standards-Version: 3.9.3
 
 Package: nubian-demo
