@@ -3,7 +3,7 @@
 case "${1}" in
     configure)
         echo Registering in GAC ...
-        gacutil -i /opt/nubian/gacd/nubian/nubian.MonoRuntimeResolver.dll
+        gacutil -i /opt/nubian/gacd/nubian.MonoRuntimeResolver.dll
 		;;
 
     abort-remove)

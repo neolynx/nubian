@@ -2,8 +2,8 @@
 
 case "${1}" in
     remove|deconfigure)
-        echo Configuring Mono Assembly Resolver ...
-        gacutil -u nubian.MonoRuntimeResolver.dll
+        echo Removing Mono Assembly Resolver from GAC...
+        gacutil -u nubian.MonoRuntimeResolver
         ;;
 
     upgrade)
