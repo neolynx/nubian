@@ -1,0 +1,13 @@
+Source: nubian-nuget
+Section: devel
+Priority: optional
+Maintainer: Jacob Reimers <jacob@reimers.dk>
+Build-Depends: debhelper (>= 8)
+Standards-Version: 3.9.3
+
+Package: nubian-nuget
+Section: misc
+Architecture: all
+Depends: ${misc:Depends}, mono-complete (>=4.6.2)
+Description: NuGet command line client for nubian.
+ Unofficial release of NuGet client v3.5
