@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -76,7 +76,6 @@ nubian_package()
   echo "* Downloading and extracting $pkg $pkgver ..."
   mkdir pkg
   nubian-nuget install $pkg -Version $pkgver -OutputDirectory pkg/
-  #  wget -q -O pkg/${pkgname}.nupkg $pkgurl
   if [ $? -ne 0 ]; then
     echo "\nError downloading $pkgurl" >&2
     exit 1
@@ -104,8 +103,29 @@ nubian_package()
   echo "* Copying files ..."
   mkdir deb
   cd deb
-  mkdir -p opt/mono/4.0
-  cp ../pkg/lib/net40/* opt/mono/4.0
+  mkdir -p opt/mono/
+  LIBPATHS=(
+   "../pkg/lib/net461"
+   "../pkg/lib/Net461"
+   "../pkg/lib/net46"
+   "../pkg/lib/Net46"
+   "../pkg/lib/net452"
+   "../pkg/lib/Net452"
+   "../pkg/lib/net451"
+   "../pkg/lib/Net451"
+   "../pkg/lib/net45"
+   "../pkg/lib/Net45"
+   "../pkg/lib/net40"
+   "../pkg/lib/Net40" )
+
+   for path in ${LIBPATHS[@]}; do
+    if [ -d $"path" ]; then
+      echo "Using assemblies found in $path"
+      cp "$path/*" opt/mono
+      break
+    fi
+  done
+  
   mkdir -p usr/share/nupkg/
   cp "pkg/$pkg.$pkgver/$pkgname" usr/share/nupkg/
 
@@ -133,8 +153,8 @@ Standards-Version: 3.9.6
 Package: $debname
 Architecture: all
 Description: debianized $pkg nuget package
- $nuget_summary
  $nuget_description
+ $nuget_summary
 
 Package: libmono-$pkgname
 Architecture: all
