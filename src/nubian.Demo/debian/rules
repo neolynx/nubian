@@ -19,5 +19,5 @@ override_dh_auto_build:
 override_dh_auto_install:
 	dh_auto_install
 	mkdir -p debian/$(PACKAGE)/$(TARGET)
-	cp $(BINARY) debian/$(PACKAGE)/$(TARGET)/`basename $(BINARY) | tr A-Z a-z | sed s/.exe$$// | tr '.' '-'`
+	cp $(BINARY) debian/$(PACKAGE)/$(TARGET)/
 
