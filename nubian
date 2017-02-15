@@ -122,7 +122,7 @@ nubian_package()
     echo "Looking for assemblies in $(pwd)/$path"
     if [ -d "$path" ]; then
       echo "Using assemblies found in $path"
-      cp -r "$path/" opt/mono
+      cp -r $path/* opt/mono
       break
     fi
   done
