@@ -105,29 +105,31 @@ nubian_package()
   cd deb
   mkdir -p opt/mono/
   LIBPATHS=(
-   "../pkg/lib/net461"
-   "../pkg/lib/Net461"
-   "../pkg/lib/net46"
-   "../pkg/lib/Net46"
-   "../pkg/lib/net452"
-   "../pkg/lib/Net452"
-   "../pkg/lib/net451"
-   "../pkg/lib/Net451"
-   "../pkg/lib/net45"
-   "../pkg/lib/Net45"
-   "../pkg/lib/net40"
-   "../pkg/lib/Net40" )
+   "../$pkg.$pkgver/lib/net461"
+   "../$pkg.$pkgver/lib/Net461"
+   "../$pkg.$pkgver/lib/net46"
+   "../$pkg.$pkgver/lib/Net46"
+   "../$pkg.$pkgver/lib/net452"
+   "../$pkg.$pkgver/lib/Net452"
+   "../$pkg.$pkgver/lib/net451"
+   "../$pkg.$pkgver/lib/Net451"
+   "../$pkg.$pkgver/lib/net45"
+   "../$pkg.$pkgver/lib/Net45"
+   "../$pkg.$pkgver/lib/net40"
+   "../$pkg.$pkgver/lib/Net40" )
 
-   for path in ${LIBPATHS[@]}; do
-    if [ -d $"path" ]; then
+   for path in ${LIBPATHS[@]}; do    
+    echo "Looking for assemblies in $(pwd)/$path"
+    if [ -d "$path" ]; then
       echo "Using assemblies found in $path"
-      cp "$path/*" opt/mono
+      cp -r "$path/" opt/mono
       break
     fi
   done
-  
+
   mkdir -p usr/share/nupkg/
-  cp "pkg/$pkg.$pkgver/$pkgname" usr/share/nupkg/
+
+  cp "../$pkg.$pkgver/$pkgname" usr/share/nupkg/
 
   #echo "* Creating git repo ..."
   #git init . >/dev/null
