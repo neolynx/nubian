@@ -138,8 +138,7 @@ nubian_package()
 
   pkgname=`echo $pkg | tr A-Z a-z`
   debname=nupkg-$pkgname
-  nuget_summary=`echo $nuget_summary | fmt --width=80 | sed 's/^/ /'`
-  nuget_description=`echo $nuget_description | fmt --width=80 | sed 's/^/ /'`
+  nuget_description=`echo $nuget_description\n$nuget_summary | fmt --width=80 | sed 's/^/ /'`
   echo "* Creating debian files ..."
   mkdir -p debian/source
   echo "3.0 (git)" > debian/source/format
@@ -156,12 +155,10 @@ Package: $debname
 Architecture: all
 Description: debianized $pkg nuget package
  $nuget_description
- $nuget_summary
 
 Package: libmono-$pkgname
 Architecture: all
 Description: debianized $pkg nuget DLL
-$nuget_summary
 $nuget_description
 EOF
   cat >debian/changelog <<EOF
