@@ -104,21 +104,10 @@ nubian_package()
   mkdir deb
   cd deb
   mkdir -p opt/mono/lib
-  LIBPATHS=(
-   "../$pkg.$pkgver/lib/net461"
-   "../$pkg.$pkgver/lib/Net461"
-   "../$pkg.$pkgver/lib/net46"
-   "../$pkg.$pkgver/lib/Net46"
-   "../$pkg.$pkgver/lib/net452"
-   "../$pkg.$pkgver/lib/Net452"
-   "../$pkg.$pkgver/lib/net451"
-   "../$pkg.$pkgver/lib/Net451"
-   "../$pkg.$pkgver/lib/net45"
-   "../$pkg.$pkgver/lib/Net45"
-   "../$pkg.$pkgver/lib/net40"
-   "../$pkg.$pkgver/lib/Net40" )
+  LIBPATHS=( "net461" "Net461" "net46" "Net46" "net452" "Net452" "net451" "Net451" "net45" "Net45" "net40" "Net40" )
 
-   for path in ${LIBPATHS[@]}; do    
+   for libpath in ${LIBPATHS[@]}; do
+    path="../$pkg.$pkgver/lib/$libpath"
     echo "Looking for assemblies in $(pwd)/$path"
     if [ -d "$path" ]; then
       echo "Using assemblies found in $path"
