@@ -1,6 +1,12 @@
+nubian-demo (0.0.3) jessie; urgency=medium
+
+  * Use /opt/mono/lib as target for symbolic link.
+
+ -- Jacob Reimers <jacob@reimers.dk>  Fri, 17 Feb 2017 15:22:00 +0100
+
 nubian-demo (0.0.2) jessie; urgency=medium
 
-  * Use symbolic links to resolve dependencies..
+  * Use symbolic links to resolve dependencies.
 
  -- Jacob Reimers <jacob@reimers.dk>  Fri, 17 Feb 2017 13:12:00 +0100
 

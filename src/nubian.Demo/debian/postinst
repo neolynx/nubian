@@ -3,10 +3,11 @@
 case "${1}" in
     configure)
         echo Setting up symbolic link to assemblies ...
-	ln -s /opt/mono /opt/mono/bin/nubian-demo/nubianbin
+	ln -s /opt/mono/lib /opt/mono/bin/nubian-demo/nubianbin
 		;;
 
     abort-remove)
+	echo Removing symbolic link to aasemblies
 	rm -r /opt/mono/bin/nubian-demo/nubianbin
         ;;
 
