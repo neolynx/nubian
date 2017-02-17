@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-TARGET := opt/mono/bin
+TARGET := opt/mono/bin/nubian-demo
 PACKAGE := nubian-demo
 BINARY := bin/Release/nubian.Demo.exe
 
@@ -20,4 +20,5 @@ override_dh_auto_install:
 	dh_auto_install
 	mkdir -p debian/$(PACKAGE)/$(TARGET)
 	cp $(BINARY) debian/$(PACKAGE)/$(TARGET)/
+	cp "$(BINARY).config" debian/$(PACKAGE)/$(TARGET)/
 

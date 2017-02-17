@@ -1,0 +1,21 @@
+#!/bin/bash
+
+case "${1}" in
+    configure)
+        echo Setting up symbolic link to assemblies ...
+	ln -s /opt/mono /opt/mono/bin/nubian-demo/nubianbin
+		;;
+
+    abort-remove)
+	rm -r /opt/mono/bin/nubian-demo/nubianbin
+        ;;
+
+    abort-upgrade)
+        ;;
+    *)
+        echo "postinst called with unknown argument (${1})"
+        exit 1
+        ;;
+esac
+
+exit 0
