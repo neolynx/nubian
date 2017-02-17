@@ -103,7 +103,7 @@ nubian_package()
   echo "* Copying files ..."
   mkdir deb
   cd deb
-  mkdir -p opt/mono/
+  mkdir -p opt/mono/lib
   LIBPATHS=(
    "../$pkg.$pkgver/lib/net461"
    "../$pkg.$pkgver/lib/Net461"
@@ -122,7 +122,7 @@ nubian_package()
     echo "Looking for assemblies in $(pwd)/$path"
     if [ -d "$path" ]; then
       echo "Using assemblies found in $path"
-      cp -r $path/* opt/mono
+      cp -r $path/* opt/mono/lib
       break
     fi
   done
