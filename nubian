@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -e
 
@@ -104,9 +104,10 @@ nubian_package()
   mkdir deb
   cd deb
   mkdir -p opt/mono/lib
-  LIBPATHS=( "net461" "Net461" "net46" "Net46" "net452" "Net452" "net451" "Net451" "net45" "Net45" "net40" "Net40" )
+  LIBPATHS="net461 Net461 net46 Net46 net452 Net452 net451 Net451 net45 Net45 net40 Net40"
 
-   for libpath in ${LIBPATHS[@]}; do
+   for libpath in $LIBPATHS
+   do
     path="../$pkg.$pkgver/lib/$libpath"
     echo "Looking for assemblies in $(pwd)/$path"
     if [ -d "$path" ]; then
