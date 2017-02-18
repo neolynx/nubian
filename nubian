@@ -190,7 +190,7 @@ EOF
 }
 
 case $action in
-  package|nuget-localonly|nuget-nolocal)
+  package)
     action=`echo $action | tr - _`
     nubian_$action $@
     ;;
