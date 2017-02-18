@@ -144,7 +144,7 @@ Standards-Version: 3.9.6
 Package: $debname
 Architecture: all
 Description: debianized $pkg nuget package
- $nuget_description
+$nuget_description
 
 Package: libmono-$pkgname
 Architecture: all
