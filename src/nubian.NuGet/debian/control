@@ -8,6 +8,6 @@ Standards-Version: 3.9.3
 Package: nubian-nuget
 Section: misc
 Architecture: all
-Depends: ${misc:Depends}, mono-complete (>=4.6.2)
+Depends: ${misc:Depends}, mono-runtime (>=4.6.2)
 Description: NuGet command line client for nubian.
  Unofficial release of NuGet client v3.5
