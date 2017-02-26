@@ -8,18 +8,27 @@ echo
 echo -n "Press Enter to Proceed or Ctrl-C to abort... "
 read x
 
+echo
 echo here we go...
 echo
 
+set -e
+
 cd src/nubian.NuGet/
 debuild -us -uc -b
+
+sudo apt-get install libgdiplus libmono-accessibility4.0-cil libmono-corlib4.5-cil libmono-csharp4.0c-cil libmono-data-tds4.0-cil libmono-i18n-west4.0-cil libmono-i18n4.0-cil libmono-ldap4.0-cil libmono-messaging4.0-cil libmono-microsoft-build-engine4.0-cil libmono-microsoft-build-framework4.0-cil libmono-microsoft-build-utilities-v4.0-4.0-cil libmono-microsoft-build4.0-cil libmono-microsoft-csharp4.0-cil libmono-posix4.0-cil libmono-security4.0-cil libmono-sqlite4.0-cil libmono-system-componentmodel-composition4.0-cil libmono-system-componentmodel-dataannotations4.0-cil libmono-system-configuration-install4.0-cil libmono-system-configuration4.0-cil libmono-system-core4.0-cil libmono-system-data-services-client4.0-cil libmono-system-data4.0-cil libmono-system-design4.0-cil libmono-system-drawing4.0-cil libmono-system-enterpriseservices4.0-cil libmono-system-identitymodel-selectors4.0-cil libmono-system-identitymodel4.0-cil libmono-system-io-compression4.0-cil libmono-system-ldap4.0-cil libmono-system-messaging4.0-cil libmono-system-net-http4.0-cil libmono-system-numerics4.0-cil libmono-system-runtime-serialization-formatters-soap4.0-cil libmono-system-runtime-serialization4.0-cil libmono-system-security4.0-cil libmono-system-servicemodel-activation4.0-cil libmono-system-servicemodel-internals0.0-cil libmono-system-servicemodel4.0a-cil libmono-system-transactions4.0-cil libmono-system-web-applicationservices4.0-cil libmono-system-web-services4.0-cil libmono-system-web4.0-cil libmono-system-windows-forms4.0-cil libmono-system-xaml4.0-cil libmono-system-xml-linq4.0-cil libmono-system-xml4.0-cil libmono-system4.0-cil libmono-webbrowser4.0-cil libmono-windowsbase4.0-cil mono-4.0-gac mono-gac mono-runtime mono-runtime-common mono-runtime-sgen
+
 sudo dpkg -i ../nubian-nuget_0.0.1_all.deb
 cd ../..
+
+sudo apt-get install devscripts debhelper fakeroot xmlstarlet nubian-nuget ca-certificates-mono
 
 ./nubian package NEventStore 5.2.0
 sudo dpkg -i nupkg-neventstore_5.2.0_all.deb libmono-neventstore_5.2.0_all.deb
 
 cd src/nubian.Demo/
+sudo apt-get install mono-xbuild mono-mcs
 debuild -us -uc -b
 sudo dpkg -i ../nubian-demo_0.0.3_all.deb
 cd ../..
