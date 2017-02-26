@@ -1,0 +1,28 @@
+#!/bin/sh
+
+echo
+echo This will build and install everything...
+echo
+echo Note: it will do stuff as root and probably kill your cat
+echo
+echo -n "Press Enter to Proceed or Ctrl-C to abort... "
+read x
+
+echo here we go...
+echo
+
+cd src/nubian.NuGet/
+debuild -us -uc -b
+sudo dpkg -i ../nubian-nuget_0.0.1_all.deb
+cd ../..
+
+./nubian package NEventStore 5.2.0
+sudo dpkg -i nupkg-neventstore_5.2.0_all.deb libmono-neventstore_5.2.0_all.deb
+
+cd src/nubian.Demo/
+debuild -us -uc -b
+sudo dpkg -i ../nubian-demo_0.0.3_all.deb
+cd ../..
+
+/opt/mono/bin/nubian-demo/nubian.Demo.exe
+
