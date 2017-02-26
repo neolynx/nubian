@@ -8,6 +8,6 @@ Standards-Version: 3.9.3
 Package: nubian-nuget
 Section: misc
 Architecture: all
-Depends: ${misc:Depends}, mono-runtime (>=4.6.2)
+Depends: ${misc:Depends}, mono-runtime, libmono-system-core4.0-cil, libmono-system-componentmodel-composition4.0-cil, libmono-microsoft-build-utilities-v4.0-4.0-cil, libmono-system-net-http4.0-cil, libmono-windowsbase4.0-cil, libmono-system-xml-linq4.0-cil, libmono-system-data4.0-cil, libmono-system-io-compression4.0-cil, libmono-system-data-services-client4.0-cil, libmono-system-servicemodel4.0a-cil, libmono-microsoft-csharp4.0-cil, libmono-microsoft-build-engine4.0-cil, libmono-microsoft-build4.0-cil
 Description: NuGet command line client for nubian.
  Unofficial release of NuGet client v3.5
