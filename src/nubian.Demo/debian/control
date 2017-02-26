@@ -8,6 +8,6 @@ Standards-Version: 3.9.3
 Package: nubian-demo
 Section: misc
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, libmono-neventstore (=5.2.0)
+Depends: ${misc:Depends}, libmono-neventstore (=5.2.0)
 Description: nubian demo executable
  Demo executable for nubian, using NEventStore nupkg

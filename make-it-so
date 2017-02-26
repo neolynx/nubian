@@ -22,7 +22,7 @@ sudo apt-get install libgdiplus libmono-accessibility4.0-cil libmono-corlib4.5-c
 sudo dpkg -i ../nubian-nuget_0.0.1_all.deb
 cd ../..
 
-sudo apt-get install devscripts debhelper fakeroot xmlstarlet nubian-nuget ca-certificates-mono
+sudo apt-get install devscripts debhelper fakeroot lintian xmlstarlet nubian-nuget ca-certificates-mono
 
 ./nubian package NEventStore 5.2.0
 sudo dpkg -i nupkg-neventstore_5.2.0_all.deb libmono-neventstore_5.2.0_all.deb

@@ -8,6 +8,6 @@ Standards-Version: 3.9.3
 Package: nubian
 Section: misc
 Architecture: all
-Depends: devscripts, debhelper, fakeroot, xmlstarlet, nubian-nuget, ca-certificates-mono
+Depends: devscripts, debhelper, fakeroot, lintian, xmlstarlet, nubian-nuget, ca-certificates-mono
 Description: Debian packageing utility for nuget packages
  Convert nuget packages to debian packages
