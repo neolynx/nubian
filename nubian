@@ -5,45 +5,9 @@ set -e
 usage()
 {
   echo "Usage: $0 package NUGET_ID [VERSION]" >&2
-  echo "       $0 restore"
   echo "  e.g. $0 package NEventStore 5.2.0"
   exit 1
 }
-
-package_not_installed()
-{
-  if [ `dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -c "ok installed"` -eq 1 ]; then
-    return 1
-  fi
-  return 0
-}
-
-# Script dependecy checks
-
-if package_not_installed nubian-nuget ; then
-  echo "Please install nubian-nuget"
-  exit 1
-fi
-
-if package_not_installed devscripts ; then
-  echo "Please install devscripts"
-  exit 1
-fi
-
-if package_not_installed debhelper ; then
-  echo "Please install debhelper"
-  exit 1
-fi
-
-if package_not_installed fakeroot ; then
-  echo "Please install fakeroot"
-  exit 1
-fi
-
-if package_not_installed xmlstarlet ; then
-  echo "Please install xmlstarlet"
-  exit 1
-fi
 
 action=$1
 if [ -z "$action" ]; then
