@@ -1,0 +1,12 @@
+
+
+nubian-nugget
+=============
+
+* should be called 'nouget' as it's a newer version not a fork
+* hangs if ca-certificates-mono is not installed
+
+
+mono-xbuild
+===========
+* complains about 'no input files' when in fact mono-mcs is missing
