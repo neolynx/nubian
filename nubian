@@ -20,6 +20,7 @@ nubian_package()
   pkg="$1"
   pkgver="$2"
   pkgname="$1.$2.nupkg"
+  pkgsource="$3"
 
   if [ -z "$pkg" ]; then
     echo Error: Please specify a NUGET_ID
@@ -29,6 +30,10 @@ nubian_package()
   if [ -z "$pkgver" ]; then
     echo Error: Please specify a package version
     usage
+  fi
+
+  if [ -z "$pkgsource" ]; then
+    pkgsource="https://api.nuget.org/v3/index.json"
   fi
 
   echo Creating debian package of $pkg $pkgver
