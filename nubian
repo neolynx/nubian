@@ -96,13 +96,13 @@ nubian_package()
   echo "* Nuget description: $nuget_description"
   echo "* Nuget url:         $nuget_url"
 
-  eval `xmlstarlet sel -T -t -o 'nupkgdeps="' -m //_:dependencies/_:dependency -v "concat(', nupkg-', @id, ' (>=', @version, ')')" -b -o '"' $pkg.nuspec`
-  eval `xmlstarlet sel -T -t -o 'libmonodeps="' -m //_:dependencies/_:dependency -v "concat(', libmono-', @id, ' (>=', @version, ')')" -b -o '"' $pkg.nuspec`
+  eval `xmlstarlet sel -T -t -o 'nupkgdeps="' -m //_:dependencies/_:dependency -v "concat(', nupkg-', translate(@id, '.', '-'), ' (>=', @version, ')')" -b -o '"' $pkg.nuspec`
+  eval `xmlstarlet sel -T -t -o 'libmonodeps="' -m //_:dependencies/_:dependency -v "concat(', libmono-', translate(@id, '.', '-'), ' (>=', @version, ')')" -b -o '"' $pkg.nuspec`
   
   nupkgdeps=`echo $nupkgdeps | tr A-Z a-z`
-  nupkgdeps="\${misc:Depends}, mono-runtime (>=4.6.2)$nupkgdeps"
+  nupkgdeps="\${misc:Depends}$nupkgdeps"
   libmonodeps=`echo $libmonodeps | tr A-Z a-z`
-  libmonodeps="\${misc:Depends}$libmonodeps"
+  libmonodeps="\${misc:Depends}, mono-runtime (>=4.6.2)$libmonodeps"
 
   echo "Nupkg Dependencies: $nupkgdeps"
   echo "libmono Dependencies: $libmonodeps"
