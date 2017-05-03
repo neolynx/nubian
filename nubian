@@ -99,31 +99,36 @@ nubian_package()
   eval `xmlstarlet sel -T -t -o 'nupkgdeps="' -m //_:dependencies/_:dependency -v "concat(', nupkg-', translate(@id, '.', '-'), ' (>=', @version, ')')" -b -o '"' $pkg.nuspec`
   eval `xmlstarlet sel -T -t -o 'libmonodeps="' -m //_:dependencies/_:dependency -v "concat(', libmono-', translate(@id, '.', '-'), ' (>=', @version, ')')" -b -o '"' $pkg.nuspec`
   
-  nupkgdeps=`echo $nupkgdeps | tr A-Z a-z`
-  nupkgdeps="\${misc:Depends}$nupkgdeps"
-  libmonodeps=`echo $libmonodeps | tr A-Z a-z`
-  libmonodeps="\${misc:Depends}, mono-runtime (>=4.6.2)$libmonodeps"
-
-  echo "Nupkg Dependencies: $nupkgdeps"
-  echo "libmono Dependencies: $libmonodeps"
-  
   echo "* Copying files ..."
   mkdir deb
   cd deb
   mkdir -p opt/mono/lib
-  LIBPATHS="net461 Net461 net46 Net46 net452 Net452 net451 Net451 net45 Net45 net40 Net40"
-
+  LIBPATHS="net47 Net47 net461 Net461 net46 Net46 net452 Net452 net451 Net451 net45 Net45 net40 Net40"
+  mono_version="4.2.1"
    for libpath in $LIBPATHS
    do
     path="../$pkg.$pkgver/lib/$libpath"
     echo "Looking for assemblies in `pwd`/$path"
-    if [ -d "$path" ]; then
+    if [ -d "$path" ]; then      
       echo "Using assemblies found in $path"
       cp -r $path/* opt/mono/lib
+      if [[ $libpath = "net461" || $libpath = "Net461" ]]; then
+        mono_version="4.6.1"
+      elif [[ $libpath = "net462" || $libpath = "Net462" || $libpath = "net47" || $libpath = "Net47" ]]; then
+        mono_version="5.0.0"
+      fi
       break
     fi
   done
 
+  nupkgdeps=`echo $nupkgdeps | tr A-Z a-z`
+  nupkgdeps="\${misc:Depends}$nupkgdeps"
+  libmonodeps=`echo $libmonodeps | tr A-Z a-z`
+  libmonodeps="\${misc:Depends}, mono-runtime (>=$mono_version)$libmonodeps"
+
+  echo "Nupkg Dependencies: $nupkgdeps"
+  echo "libmono Dependencies: $libmonodeps"
+  
   mkdir -p usr/share/nupkg/
 
   cp "../$pkg.$pkgver/$pkgname" usr/share/nupkg/
