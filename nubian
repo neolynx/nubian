@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -6,6 +6,8 @@ usage()
 {
   echo "Usage: $0 package NUGET_ID [VERSION]" >&2
   echo "  e.g. $0 package NEventStore 5.2.0"
+  echo "Bulk conversion of folder"
+  echo "  $0 bulkconvert [FOLDER_PATH]"
   exit 1
 }
 
@@ -14,6 +16,31 @@ if [ -z "$action" ]; then
   usage
 fi
 shift
+
+nubian_bulkconvert()
+{
+  ver3_regex="(.*)/([A-Z].+)\.([0-9]+\.[0-9]+\.[0-9]+)\.nupkg"
+  ver4_regex="(.*)/([A-Z].+)\.([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\.nupkg"
+  
+  folder="$1"
+  echo "Bulk converting $folder"
+
+  for nupkg in $(find $folder -type f -name '*.nupkg')
+  do
+    if [[ $nupkg =~ $ver4_regex || $nupkg =~ $ver3_regex ]]
+    then
+      pkg="${BASH_REMATCH[2]}"
+      pkgver="${BASH_REMATCH[3]}"
+      echo "$pkg"
+      echo "$pkgver"
+
+      echo "Converting $pkg $pkgver"
+      nubian_package $pkg $pkgver $folder
+    else
+      echo "Considered $nupkg, but was not a match"
+    fi
+  done
+}
 
 nubian_package()
 {
@@ -69,17 +96,17 @@ nubian_package()
   echo "* Nuget description: $nuget_description"
   echo "* Nuget url:         $nuget_url"
 
-  nupkgdeps=`xmlstarlet sel -T -t -m //_:dependencies/_:dependency -v "concat(', nupkg-', @id, ' (>=', @version, ')')" $pkg.nuspec`
-  libmonodeps=`xmlstarlet sel -T -t -m //_:dependencies/_:dependency -v "concat(', libmono-', @id, ' (>=', @version, ')')" $pkg.nuspec`
+  eval `xmlstarlet sel -T -t -o 'nupkgdeps="' -m //_:dependencies/_:dependency -v "concat(', nupkg-', @id, ' (>=', @version, ')')" -b -o '"' $pkg.nuspec`
+  eval `xmlstarlet sel -T -t -o 'libmonodeps="' -m //_:dependencies/_:dependency -v "concat(', libmono-', @id, ' (>=', @version, ')')" -b -o '"' $pkg.nuspec`
+  
   nupkgdeps=`echo $nupkgdeps | tr A-Z a-z`
   nupkgdeps="\${misc:Depends}, mono-runtime (>=4.6.2)$nupkgdeps"
-
   libmonodeps=`echo $libmonodeps | tr A-Z a-z`
   libmonodeps="\${misc:Depends}$libmonodeps"
 
   echo "Nupkg Dependencies: $nupkgdeps"
   echo "libmono Dependencies: $libmonodeps"
-
+  
   echo "* Copying files ..."
   mkdir deb
   cd deb
@@ -106,7 +133,7 @@ nubian_package()
   #git add .
   #git commit -m "import $pkgname" >/dev/null
 
-  pkgname=`echo $pkg | tr A-Z a-z`
+  pkgname=`echo $pkg | tr A-Z a-z | tr \. -`
   debname=nupkg-$pkgname
   nuget_description=`echo $nuget_description\n$nuget_summary | fmt --width=80 | sed 's/^/ /'`
   echo "* Creating debian files ..."
@@ -173,6 +200,10 @@ EOF
 
 case $action in
   package)
+    action=`echo $action | tr - _`
+    nubian_$action $@
+    ;;
+  bulkconvert)    
     action=`echo $action | tr - _`
     nubian_$action $@
     ;;
