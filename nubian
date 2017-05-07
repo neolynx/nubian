@@ -4,10 +4,11 @@ set -e
 
 usage()
 {
-  echo "Usage: $0 package NUGET_ID [VERSION]" >&2
-  echo "  e.g. $0 package NEventStore 5.2.0"
+  echo "Usage: $0 package NUGET_ID [VERSION] [PACKAGE_SOURCE]" >&2
+  echo "  e.g. $0 package NEventStore 5.2.0 /.nuget/packages (optional)"
   echo "Bulk conversion of folder"
   echo "  $0 bulkconvert [FOLDER_PATH]"
+  echo "  e.g. $0 bulkconvert /.nuget/packages"
   exit 1
 }
 
@@ -96,14 +97,15 @@ nubian_package()
   echo "* Nuget description: $nuget_description"
   echo "* Nuget url:         $nuget_url"
 
-  eval `xmlstarlet sel -T -t -o 'nupkgdeps="' -m //_:dependencies/_:dependency -v "concat(', nupkg-', translate(@id, '.', '-'), ' (>=', @version, ')')" -b -o '"' $pkg.nuspec`
-  eval `xmlstarlet sel -T -t -o 'libmonodeps="' -m //_:dependencies/_:dependency -v "concat(', libmono-', translate(@id, '.', '-'), ' (>=', @version, ')')" -b -o '"' $pkg.nuspec`
+  eval `xmlstarlet sel -T -t -o 'nupkgdeps="' -m //_:dependencies/_:dependency -v "concat(', nupkg-', translate(@id, '.', '-'), ' (>= ', @version, ')')" -b -o '"' $pkg.nuspec`
+  eval `xmlstarlet sel -T -t -o 'libmonodeps="' -m //_:dependencies/_:dependency -v "concat(', libmono-', translate(@id, '.', '-'), ' (>= ', @version, ')')" -b -o '"' $pkg.nuspec`
   
   echo "* Copying files ..."
   mkdir deb
   cd deb
   mkdir -p opt/mono/lib
-  LIBPATHS="net47 Net47 net461 Net461 net46 Net46 net452 Net452 net451 Net451 net45 Net45 net40 Net40"
+  #LIBPATHS="netstandard1.4 netstandard1.3 netstandard1.2 net47 Net47 net462 Net462 net461 Net461 net46 Net46 net452 Net452 net451 Net451 net45 Net45 net40 Net40"
+  LIBPATHS="net461 Net461 net46 Net46 net452 Net452 net451 Net451 net45 Net45 net40 Net40"
   mono_version="4.2.1"
    for libpath in $LIBPATHS
    do
@@ -112,9 +114,9 @@ nubian_package()
     if [ -d "$path" ]; then      
       echo "Using assemblies found in $path"
       cp -r $path/* opt/mono/lib
-      if [[ $libpath = "net461" || $libpath = "Net461" ]]; then
+      if [[ $libpath = "net461" || $libpath = "Net461" || $libpath = "net46" || $libpath = "Net46" ]]; then
         mono_version="4.6.1"
-      elif [[ $libpath = "net462" || $libpath = "Net462" || $libpath = "net47" || $libpath = "Net47" ]]; then
+      elif [[ $libpath = "netstandard1.4" || $libpath = "netstandard1.3" || $libpath = "netstandard1.2" || $libpath = "net462" || $libpath = "Net462" || $libpath = "net47" || $libpath = "Net47" ]]; then
         mono_version="5.0.0"
       fi
       break
@@ -122,8 +124,16 @@ nubian_package()
   done
 
   nupkgdeps=`echo $nupkgdeps | tr A-Z a-z`
+  nupkgdeps=`echo $nupkgdeps | sed 's/>= \[\([\.0-9]\+\)\]/= \1/g'`
+  nupkgdeps=`echo $nupkgdeps | sed 's/>= [(]\([\.0-9]\+\),[)]/>> \1/g'`
+  nupkgdeps=`echo $nupkgdeps | sed 's/>= [(],\([\.0-9]\+\)[)]/<< \1/g'`
+  nupkgdeps=`echo $nupkgdeps | sed 's/>= [(],\([\.0-9]\+\)\]/<= \1/g'`
   nupkgdeps="\${misc:Depends}$nupkgdeps"
   libmonodeps=`echo $libmonodeps | tr A-Z a-z`
+  libmonodeps=`echo $libmonodeps | sed 's/>= \[\([\.0-9]\+\)\]/= \1/g'`
+  libmonodeps=`echo $libmonodeps | sed 's/>= [(]\([\.0-9]\+\),[)]/>> \1/g'`
+  libmonodeps=`echo $libmonodeps | sed 's/>= [(],\([\.0-9]\+\)[)]/<< \1/g'`
+  libmonodeps=`echo $libmonodeps | sed 's/>= [(],\([\.0-9]\+\)\]/<= \1/g'`
   libmonodeps="\${misc:Depends}, mono-runtime (>=$mono_version)$libmonodeps"
 
   echo "Nupkg Dependencies: $nupkgdeps"
