@@ -36,6 +36,8 @@ get_frameworkName()
     fwk_name=".NETFramework4.6.2"
   elif [[ $1 = "net47" ]]; then
     fwk_name=".NETFramework4.7"
+  elif [[ $1 = "netstandard1.0" ]]; then
+    fwk_name=".NETStandard1.0"
   elif [[ $1 = "netstandard1.1" ]]; then
     fwk_name=".NETStandard1.1"
   elif [[ $1 = "netstandard1.2" ]]; then
@@ -54,13 +56,13 @@ get_fallbackMatch()
     echo "Getting fallback framework name"
 
     eval `xmlstarlet sel -T -t -o 'fwk_name="' \
-    --if "//_:dependencies/_:group[contains(@targetFramework, '.NETStandard')]" \
+    --if "//_:dependencies/_:group[contains(@targetFramework, '.NETFramework4')]" \
     -m "(//_:dependencies/_:group[contains(@targetFramework, '.NETStandard')])[last()]" \
     -m "@targetFramework" \
     -v . \
     -b \
     -b \
-    --elif "//_:dependencies/_:group[contains(@targetFramework, '.NETFramework4')]" \
+    --elif "//_:dependencies/_:group[contains(@targetFramework, '.NETStandard')]" \
     -m "(//_:dependencies/_:group[contains(@targetFramework, '.NETFramework4')])[last()]" \
     -m "@targetFramework" \
     -v . \
@@ -154,7 +156,7 @@ nubian_package()
   mkdir deb
   cd deb
   mkdir -p opt/mono/lib
-  LIBPATHS="netstandard2.0 netstandard1.4 netstandard1.3 netstandard1.2 net47 net462 net461 net46 net452 net451 net45 Net45 net40 Net40"
+  LIBPATHS="net462 net461 net46 net452 net451 net45 Net45 net40 Net40 netstandard2.0 netstandard1.4 netstandard1.3 netstandard1.2 netstandard1.1 netstandard1.0"
   mono_version="4.2.1"
    for libpath in $LIBPATHS
    do
@@ -164,6 +166,7 @@ nubian_package()
       echo "Using assemblies found in $path"
       get_frameworkName $libpath $pkg
       cp -r $path/* opt/mono/lib
+      rm -f opt/mono/lib/_._
       if [[  $libpath = "netstandard1.4" || $libpath = "netstandard1.3" || $libpath = "netstandard1.2" || $libpath = "net462" || $libpath = "net47" || $libpath = "net461" || $libpath = "net46" ]]; then
         mono_version="4.6.0"
       elif [[  $libpath = "netstandard2.0" ]]; then
