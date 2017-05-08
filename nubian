@@ -44,7 +44,31 @@ get_frameworkName()
     fwk_name=".NETStandard1.3"
   elif [[ $1 = "netstandard1.4" ]]; then
     fwk_name=".NETStandard1.4"
+  else
+    get_fallbackMatch $2    
   fi
+}
+
+get_fallbackMatch()
+{
+    echo "Getting fallback framework name"
+
+    eval `xmlstarlet sel -T -t -o 'fwk_name="' \
+    --if "//_:dependencies/_:group[contains(@targetFramework, '.NETStandard')]" \
+    -m "(//_:dependencies/_:group[contains(@targetFramework, '.NETStandard')])[last()]" \
+    -m "@targetFramework" \
+    -v . \
+    -b \
+    -b \
+    --elif "//_:dependencies/_:group[contains(@targetFramework, '.NETFramework4')]" \
+    -m "(//_:dependencies/_:group[contains(@targetFramework, '.NETFramework4')])[last()]" \
+    -m "@targetFramework" \
+    -v . \
+    -b \
+    -b \
+    -b \
+    -o '"' \
+    "$1.nuspec"`
 }
 
 nubian_bulkconvert()
@@ -138,7 +162,7 @@ nubian_package()
     echo "Looking for assemblies in `pwd`/$path"
     if [ -d "$path" ]; then      
       echo "Using assemblies found in $path"
-      get_frameworkName $libpath
+      get_frameworkName $libpath $pkg
       cp -r $path/* opt/mono/lib
       if [[  $libpath = "netstandard1.4" || $libpath = "netstandard1.3" || $libpath = "netstandard1.2" || $libpath = "net462" || $libpath = "net47" || $libpath = "net461" || $libpath = "net46" ]]; then
         mono_version="4.6.0"
@@ -154,6 +178,14 @@ nubian_package()
   cp "../$pkg.$pkgver/$pkgname" usr/share/nupkg/
 
   cd ..
+
+  echo "FWK: |$fwk_name|"
+  if [[ ! $fwk_name ]]; then
+   get_fallbackMatch $pkg
+  fi
+
+  echo "Finding dependencies for $fwk_name"
+
   eval `xmlstarlet sel -T -t -o 'nupkgdeps="' \
   --if //_:dependencies/_:group[@targetFramework="'$fwk_name'"] \
   -m //_:dependencies/_:group[@targetFramework="'$fwk_name'"]/_:dependency \
