@@ -18,6 +18,35 @@ if [ -z "$action" ]; then
 fi
 shift
 
+get_frameworkName()
+{
+  if [[ $1 = "net40" || $1 = "Net40" ]]; then
+    fwk_name=".NETFramework4.0"
+  elif [[ $1 = "net45" || $1 = "Net45" ]]; then
+    fwk_name=".NETFramework4.5"
+  elif [[ $1 = "net451" ]]; then
+    fwk_name=".NETFramework4.5.1"
+  elif [[ $1 = "net452" ]]; then
+    fwk_name=".NETFramework4.5.2"
+  elif [[ $1 = "net46" ]]; then
+    fwk_name=".NETFramework4.6"
+  elif [[ $1 = "net461" ]]; then
+    fwk_name=".NETFramework4.6.1"
+  elif [[ $1 = "net462" ]]; then
+    fwk_name=".NETFramework4.6.2"
+  elif [[ $1 = "net47" ]]; then
+    fwk_name=".NETFramework4.7"
+  elif [[ $1 = "netstandard1.1" ]]; then
+    fwk_name=".NETStandard1.1"
+  elif [[ $1 = "netstandard1.2" ]]; then
+    fwk_name=".NETStandard1.2"
+  elif [[ $1 = "netstandard1.3" ]]; then
+    fwk_name=".NETStandard1.3"
+  elif [[ $1 = "netstandard1.4" ]]; then
+    fwk_name=".NETStandard1.4"
+  fi
+}
+
 nubian_bulkconvert()
 {
   ver3_regex="(.*)/([A-Z].+)\.([0-9]+\.[0-9]+\.[0-9]+)\.nupkg"
@@ -97,15 +126,11 @@ nubian_package()
   echo "* Nuget description: $nuget_description"
   echo "* Nuget url:         $nuget_url"
 
-  eval `xmlstarlet sel -T -t -o 'nupkgdeps="' -m //_:dependencies/_:dependency -v "concat(', nupkg-', translate(@id, '.', '-'), ' (>= ', @version, ')')" -b -o '"' $pkg.nuspec`
-  eval `xmlstarlet sel -T -t -o 'libmonodeps="' -m //_:dependencies/_:dependency -v "concat(', libmono-', translate(@id, '.', '-'), ' (>= ', @version, ')')" -b -o '"' $pkg.nuspec`
-  
   echo "* Copying files ..."
   mkdir deb
   cd deb
   mkdir -p opt/mono/lib
-  #LIBPATHS="netstandard1.4 netstandard1.3 netstandard1.2 net47 Net47 net462 Net462 net461 Net461 net46 Net46 net452 Net452 net451 Net451 net45 Net45 net40 Net40"
-  LIBPATHS="net461 Net461 net46 Net46 net452 Net452 net451 Net451 net45 Net45 net40 Net40"
+  LIBPATHS="netstandard2.0 netstandard1.4 netstandard1.3 netstandard1.2 net47 net462 net461 net46 net452 net451 net45 Net45 net40 Net40"
   mono_version="4.2.1"
    for libpath in $LIBPATHS
    do
@@ -113,15 +138,54 @@ nubian_package()
     echo "Looking for assemblies in `pwd`/$path"
     if [ -d "$path" ]; then      
       echo "Using assemblies found in $path"
+      get_frameworkName $libpath
       cp -r $path/* opt/mono/lib
-      if [[ $libpath = "net461" || $libpath = "Net461" || $libpath = "net46" || $libpath = "Net46" ]]; then
-        mono_version="4.6.1"
-      elif [[ $libpath = "netstandard1.4" || $libpath = "netstandard1.3" || $libpath = "netstandard1.2" || $libpath = "net462" || $libpath = "Net462" || $libpath = "net47" || $libpath = "Net47" ]]; then
-        mono_version="5.0.0"
+      if [[  $libpath = "netstandard1.4" || $libpath = "netstandard1.3" || $libpath = "netstandard1.2" || $libpath = "net462" || $libpath = "net47" || $libpath = "net461" || $libpath = "net46" ]]; then
+        mono_version="4.6.0"
+      elif [[  $libpath = "netstandard2.0" ]]; then
+        mono_version="4.8.0"
       fi
       break
     fi
   done
+
+  mkdir -p usr/share/nupkg/
+
+  cp "../$pkg.$pkgver/$pkgname" usr/share/nupkg/
+
+  cd ..
+  eval `xmlstarlet sel -T -t -o 'nupkgdeps="' \
+  --if //_:dependencies/_:group[@targetFramework="'$fwk_name'"] \
+  -m //_:dependencies/_:group[@targetFramework="'$fwk_name'"]/_:dependency \
+  -v "concat(', nupkg-', translate(@id, '.', '-'), ' (>= ', @version, ')')" \
+  -b \
+  --elif "//_:dependencies/_:group[not(@targetFramework)]" \
+  -m "//_:dependencies/_:group[not(@targetFramework)]/_:dependency" \
+  -v "concat(', nupkg-', translate(@id, '.', '-'), ' (>= ', @version, ')')" \
+  -b \
+  --else \
+  -m //_:dependencies/_:dependency \
+  -v "concat(', nupkg-', translate(@id, '.', '-'), ' (>= ', @version, ')')" \
+  -b \
+  -b \
+  -o '"' \
+  $pkg.nuspec`
+  eval `xmlstarlet sel -T -t -o 'libmonodeps="' \
+  --if //_:dependencies/_:group[@targetFramework="'$fwk_name'"] \
+  -m //_:dependencies/_:group[@targetFramework="'$fwk_name'"]/_:dependency \
+  -v "concat(', libmono-', translate(@id, '.', '-'), ' (>= ', @version, ')')" \
+  -b \
+  --elif "//_:dependencies/_:group[not(@targetFramework)]" \
+  -m "//_:dependencies/_:group[not(@targetFramework)]/_:dependency" \
+  -v "concat(', libmono-', translate(@id, '.', '-'), ' (>= ', @version, ')')" \
+  -b \
+  --else \
+  -m //_:dependencies/_:dependency \
+  -v "concat(', libmono-', translate(@id, '.', '-'), ' (>= ', @version, ')')" \
+  -b \
+  -b \
+  -o '"' \
+  $pkg.nuspec`
 
   nupkgdeps=`echo $nupkgdeps | tr A-Z a-z`
   nupkgdeps=`echo $nupkgdeps | sed 's/>= \[\([\.0-9]\+\)\]/= \1/g'`
@@ -139,9 +203,7 @@ nubian_package()
   echo "Nupkg Dependencies: $nupkgdeps"
   echo "libmono Dependencies: $libmonodeps"
   
-  mkdir -p usr/share/nupkg/
-
-  cp "../$pkg.$pkgver/$pkgname" usr/share/nupkg/
+  cd deb
 
   #echo "* Creating git repo ..."
   #git init . >/dev/null
