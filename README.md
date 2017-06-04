@@ -74,7 +74,40 @@ $ cd src/nubian.Demo/
 ```
 Note: this will remove any local nuget configuration
 
+## APT Repository
 
+### Prerequisites
+Make sure aptly, gnupg and gnupg-agent are installed.
+
+### Creating Repository
+```
+./aptly-create.sh
+```
+
+### Adding packages
+```
+./aptly-add.sh YOUR_DEBIAN_PACKAGES_HERE
+```
+
+### Starting repository server
+```
+aptly serve
+```
+
+
+### Use repository
+As user, add repo key:
+```
+gpg --export --armor YOUR_EMAIL_ADDRESS | sudo apt-key add -
+```
+
+As root, run:
+```
+echo "deb http://localhost:8080/ zesty main" >/etc/apt/sources.list.d/nubian
+apt update
+```
+
+Then install your nuget packages with ```apt install```
 
 ## TODO
 
