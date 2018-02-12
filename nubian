@@ -308,7 +308,7 @@ create_git()
   git add .
   git commit -m "debianize" >/dev/null
   git tag -a "v$(echo $nuget_version | tr '~' '-')" -m "$debname: release $nuget_version"
-  git bundle create $OUTDIR/nuget-${pkgname}_$nuget_version.git master
+  git bundle create $OUTDIR/nuget-${pkgname}_$nuget_version.git master --branches --tags
   echo Git repository nuget-${pkgname}_$nuget_version.git is ready
 }
 
