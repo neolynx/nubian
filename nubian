@@ -310,6 +310,9 @@ create_git()
   git tag -a "v$(echo $nuget_version | tr '~' '-')" -m "$debname: release $nuget_version"
   git bundle create $OUTDIR/nuget-${pkgname}_$nuget_version.git master --branches --tags
   echo Git repository nuget-${pkgname}_$nuget_version.git is ready
+  echo
+  echo "Clone it with 'git clone -b master nuget-${pkgname}_$nuget_version.git nuget-${pkgname}_$nuget_version'"
+  echo
 }
 
 create_deb()
