@@ -4,11 +4,14 @@ set -e
 
 usage()
 {
-  echo "Usage: $0 package NUGET_ID [VERSION] [PACKAGE_SOURCE]" >&2
-  echo "  e.g. $0 package NEventStore 5.2.0 /.nuget/packages (optional)"
-  echo "Bulk conversion of folder"
-  echo "  $0 bulkconvert [FOLDER_PATH]"
-  echo "  e.g. $0 bulkconvert /.nuget/packages"
+  echo "Usage: $0 deb NUGET_ID VERSION [PACKAGE_SOURCE]" >&2
+  echo "       $0 git NUGET_ID VERSION [PACKAGE_SOURCE]" >&2
+  echo "       $0 bulkconvert FOLDER_PATH"
+  echo
+  echo "Examples:"
+  echo "  $0 deb Newtonsoft.Json 10.0.3"
+  echo "  $0 deb Newtonsoft.Json 10.0.3 /.nuget/packages"
+  echo "  $0 bulkconvert /.nuget/packages"
   exit 1
 }
 
@@ -47,7 +50,7 @@ get_frameworkName()
   elif [[ $1 = "netstandard1.4" ]]; then
     fwk_name=".NETStandard1.4"
   else
-    get_fallbackMatch $2    
+    get_fallbackMatch $2
   fi
 }
 
@@ -77,7 +80,7 @@ nubian_bulkconvert()
 {
   ver3_regex="(.*)/(.+)\.([0-9]+\.[0-9]+\.[0-9]+)\.nupkg"
   ver4_regex="(.*)/(.+)\.([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\.nupkg"
-  
+
   folder="$1"
   echo "Bulk converting $folder"
 
@@ -91,7 +94,7 @@ nubian_bulkconvert()
       echo "$pkgver"
 
       echo "Converting $pkg $pkgver"
-      nubian_package $pkg $pkgver $folder &
+      setup_nuget $pkg $pkgver $folder &
       sleep 5
     else
       echo "Considered $nupkg, but was not a match"
@@ -99,13 +102,13 @@ nubian_bulkconvert()
   done
 }
 
-nubian_package()
+setup_nuget()
 {
   pkg=`echo $1 | sed 's/\b\(.\)/\u\1/g'`
   pkgver="$2"
   pkgname="$pkg.$pkgver.nupkg"
   pkgsource="$3"
-  
+
   if [ -z "$pkg" ]; then
     echo Error: Please specify a NUGET_ID
     usage
@@ -121,12 +124,8 @@ nubian_package()
   fi
 
   echo Creating debian package of $pkg $pkgver
-  home=`pwd`
-  dir=`mktemp -d`
-  cd $dir
-  echo "* Working dir: $dir"
 
-  echo "* Downloading and extracting $pkg $pkgver ..."
+  echo "* downloading and extracting ..."
   mkdir pkg
   nubian-nuget install $pkg -Version $pkgver -OutputDirectory pkg/
   if [ $? -ne 0 ]; then
@@ -164,7 +163,7 @@ nubian_package()
    do
     path="../$pkg.$pkgver/lib/$libpath"
     echo "Looking for assemblies in `pwd`/$path"
-    if [ -d "$path" ]; then      
+    if [ -d "$path" ]; then
       echo "Using assemblies found in $path"
       get_frameworkName $libpath $pkg
       cp -r $path/* opt/mono/lib
@@ -239,7 +238,7 @@ nubian_package()
 
   echo "Nupkg Dependencies: $nupkgdeps"
   echo "libmono Dependencies: $libmonodeps"
-  
+
   cd deb
 
   #echo "* Creating git repo ..."
@@ -299,26 +298,47 @@ EOF
 opt
 EOF
 
-  #git add debian
-  #git commit -m "debianize" >/dev/null
+}
 
+create_git()
+{
+  echo "* Building git repository ..."
+  git init .
+  git add .
+  git commit -m "debianize" >/dev/null
+  pwd
+  set -x
+  git bundle create $OUTDIR/${debname}_$nuget_version.git master
+  echo Git repository ${debname}_$nuget_version.git is ready
+}
+
+create_deb()
+{
   echo "* Building debian package ..."
 
   debuild -uc -us -b
 
-  cp ../*.deb $home/
+  cp ../*.deb $OUTDIR/
   echo Packages ${debname}_${nuget_version}_all.deb and libmono-${pkgname}_${nuget_version}_all.deb are ready
-  cd $home
-  rm -rf $dir
+  cd $OUTDIR
 }
 
+OUTDIR=`pwd`
+echo "* Working dir: $dir"
+dir=`mktemp -d`
+cd $dir
+
+action=`echo $action | tr - _`
 case $action in
-  package)
-    action=`echo $action | tr - _`
-    nubian_$action $@
+  deb)
+    setup_nuget $@
+    create_deb
     ;;
-  bulkconvert)    
-    action=`echo $action | tr - _`
+  git)
+    setup_nuget $@
+    create_git
+    ;;
+  bulkconvert)
     nubian_$action $@
     ;;
   *)
@@ -326,4 +346,6 @@ case $action in
     usage
     ;;
 esac
+
+rm -rf $dir
 
