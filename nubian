@@ -257,6 +257,7 @@ setup_nuget()
 Source: nuget-$pkgname
 Section: devel
 Priority: optional
+Build-Depends: debhelper (>= 8), git
 Maintainer: `git config user.name` <`git config user.email`>
 Homepage: $nuget_url
 Standards-Version: 3.9.6
