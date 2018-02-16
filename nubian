@@ -106,7 +106,6 @@ setup_nuget()
 {
   pkg=`echo $1 | sed 's/\b\(.\)/\u\1/g'`
   pkgver="$2"
-  pkgname="$pkg.$pkgver.nupkg"
   pkgsource="$3"
 
   if [ -z "$pkg" ]; then
@@ -127,18 +126,38 @@ setup_nuget()
 
   echo "* downloading and extracting ..."
   mkdir pkg
-  nubian-nuget install $pkg -Version $pkgver -OutputDirectory pkg/
+  nuget install $pkg -Version $pkgver -OutputDirectory pkg/ >/dev/null 2>&1
   if [ $? -ne 0 ]; then
     echo "\nError downloading $pkgurl" >&2
     exit 1
   fi
 
   cd pkg
+  for p in *
+  do
+    t=`ls $p/*nupkg | perl -pe 's|.*/(.*?)\.([0-9\.]+).nupkg|\1:\2|g'`
+    pkg=`echo $t | cut -d: -f1`
+    pkgver=`echo $t | cut -d: -f2`
+    create_deb $pkg $pkgver
+  done
+}
 
-  unzip "$pkg.$pkgver/$pkgname" "$pkg.nuspec"
+create_deb()
+{
+  pkg=$1
+  pkgver=$2
+  echo
+  echo =============================================
+  echo Extracting: $pkg $pkgver
+  echo =============================================
+  tempdir=`mktemp -d XXXXXXX`
+  cd $tempdir
+
+  pkgname="$pkg.$pkgver.nupkg"
+  unzip "../$pkg.$pkgver/$pkgname" "$pkg.nuspec"
   if [ $? -ne 0 ]; then
-    echo "\nError unzipping `pwd`/$pkgname" >&2
-    exit 1
+    echo "\nError unzipping `pwd`/../$pkg.$pkgver/$pkgname" >&2
+    return 1
   fi
 
   eval `xmlstarlet sel -t \
@@ -157,31 +176,49 @@ setup_nuget()
   mkdir deb
   cd deb
   mkdir -p opt/mono/lib
-  LIBPATHS="net462 net461 net46 net452 net451 net45 Net45 net40 Net40 netstandard2.0 netstandard1.4 netstandard1.3 netstandard1.2 netstandard1.1 netstandard1.0"
+  LIBPATHS="net462 net461 net46
+            net452 net451
+            net45 Net45 portable-windows8+net45
+            net40 Net40
+            netstandard2.0
+            netstandard1.4
+            netstandard1.3
+            netstandard1.2
+            netstandard1.1
+            netstandard1.0"
   mono_version="4.2.1"
-   for libpath in $LIBPATHS
-   do
-    path="../$pkg.$pkgver/lib/$libpath"
-    echo "Looking for assemblies in `pwd`/$path"
-    if [ -d "$path" ]; then
+  libs_found=0
+  tree ../../$pkg.$pkgver
+  for libpath in $LIBPATHS
+  do
+    path="../../$pkg.$pkgver/lib/$libpath"
+    if [ -d "$path" -a ! -f "$path/_._" ]; then
       echo "Using assemblies found in $path"
       get_frameworkName $libpath $pkg
       cp -r $path/* opt/mono/lib
       rm -f opt/mono/lib/_._
-      if [[  $libpath = "netstandard1.4" || $libpath = "netstandard1.3" || $libpath = "netstandard1.2" || $libpath = "net462" || $libpath = "net47" || $libpath = "net461" || $libpath = "net46" ]]; then
-        mono_version="4.6.0"
-      elif [[  $libpath = "netstandard2.0" ]]; then
-        mono_version="4.8.0"
-      fi
+      case $libpath in
+        netstandard1.4|netstandard1.3|netstandard1.2|net462|net47|net461|net46)
+          mono_version="4.6.0"
+          ;;
+        netstandard2.0)
+          mono_version="4.8.0"
+          ;;
+      esac
+      libs_found=1
       break
     fi
   done
 
+  if [ "$libs_found" -eq 0 ]; then
+    echo "Warning: no libs found"
+  fi
+
   mkdir -p usr/share/nupkg/
 
-  cp "../$pkg.$pkgver/$pkgname" usr/share/nupkg/
+  cp "../../$pkg.$pkgver/$pkgname" usr/share/nupkg/
 
-  cd ..
+  cd .. # deb
 
   echo "FWK: |$fwk_name|"
   if [[ ! $fwk_name ]]; then
@@ -241,18 +278,14 @@ setup_nuget()
 
   cd deb
 
-  #echo "* Creating git repo ..."
-  #git init . >/dev/null
-  #git add .
-  #git commit -m "import $pkgname" >/dev/null
-
   pkgname=`echo $pkg | tr A-Z a-z | tr \. -`
   debname=nupkg-$pkgname
   nuget_description=`echo $nuget_description\n$nuget_summary | fmt --width=80 | sed 's/^/ /'`
-  echo "* Creating debian files ..."
+
   mkdir -p debian/source
   echo "3.0 (git)" > debian/source/format
   echo "9" > debian/compat
+
   cat >debian/control <<EOF
 Source: nuget-$pkgname
 Section: devel
@@ -267,6 +300,9 @@ Architecture: all
 Depends: $nupkgdeps
 Description: debianized $pkg nuget package
 $nuget_description
+EOF
+  if [ "$libs_found" -eq 1 ]; then
+    cat >>debian/control <<EOF
 
 Package: libmono-$pkgname
 Architecture: all
@@ -274,6 +310,8 @@ Depends: $libmonodeps
 Description: debianized $pkg nuget DLL
 $nuget_description
 EOF
+  fi
+
   cat >debian/changelog <<EOF
 nuget-$pkgname ($nuget_version) unstable; urgency=medium
 
@@ -294,11 +332,17 @@ EOF
 usr
 EOF
 
-  cat >debian/libmono-$pkgname.install <<EOF
+  if [ "$libs_found" -eq 1 ]; then
+    cat >debian/libmono-$pkgname.install <<EOF
 #! /usr/bin/dh-exec
 opt
 EOF
+  fi
 
+  $finalize
+  cd .. # deb
+  cd .. # mktemp
+  rm -rf $tempdir
 }
 
 create_git()
@@ -315,7 +359,7 @@ create_git()
   echo
 }
 
-create_deb()
+build_deb()
 {
   echo "* Building debian package ..."
 
@@ -323,23 +367,22 @@ create_deb()
 
   cp ../*.deb $OUTDIR/
   echo Packages ${debname}_${nuget_version}_all.deb and libmono-${pkgname}_${nuget_version}_all.deb are ready
-  cd $OUTDIR
 }
 
 OUTDIR=`pwd`
-echo "* Working dir: $dir"
 dir=`mktemp -d`
 cd $dir
+echo "* Working dir: $dir"
 
 action=`echo $action | tr - _`
 case $action in
   deb)
+    finalize=build_deb
     setup_nuget $@
-    create_deb
     ;;
   git)
+    finalize=create_git
     setup_nuget $@
-    create_git
     ;;
   bulkconvert)
     nubian_$action $@
