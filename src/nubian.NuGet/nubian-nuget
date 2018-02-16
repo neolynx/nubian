@@ -1,3 +1,0 @@
-#!/bin/sh
-
-exec /usr/bin/mono /opt/nubian/nuget/NuGet.exe "$@"
