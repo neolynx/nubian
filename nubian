@@ -73,7 +73,7 @@ get_fallbackMatch()
     -b \
     -b \
     -o '"' \
-    "$1.nuspec"`
+    "../$1.nuspec"`
 }
 
 nubian_bulkconvert()
@@ -104,7 +104,7 @@ nubian_bulkconvert()
 
 setup_nuget()
 {
-  pkg=`echo $1 | sed 's/\b\(.\)/\u\1/g'`
+  pkg=$1
   pkgver="$2"
   pkgsource="$3"
 
@@ -218,65 +218,70 @@ create_deb()
 
   cp "../../$pkg.$pkgver/$pkgname" usr/share/nupkg/
 
-  cd .. # deb
 
-  echo "FWK: |$fwk_name|"
-  if [[ ! $fwk_name ]]; then
-   get_fallbackMatch $pkg
-  fi
+  if [ -f "$pkg.nuspec" ]; then
+    echo "* Framework: $fwk_name"
+    if [ -z "$fwk_name" ]; then
+     get_fallbackMatch $pkg
+    fi
 
   echo "Finding dependencies for $fwk_name"
 
-  eval `xmlstarlet sel -T -t -o 'nupkgdeps="' \
-  --if //_:dependencies/_:group[@targetFramework="'$fwk_name'"] \
-  -m //_:dependencies/_:group[@targetFramework="'$fwk_name'"]/_:dependency \
-  -v "concat(', nupkg-', translate(@id, '.', '-'), ' (>= ', @version, ')')" \
-  -b \
-  --elif "//_:dependencies/_:group[not(@targetFramework)]" \
-  -m "//_:dependencies/_:group[not(@targetFramework)]/_:dependency" \
-  -v "concat(', nupkg-', translate(@id, '.', '-'), ' (>= ', @version, ')')" \
-  -b \
-  --else \
-  -m //_:dependencies/_:dependency \
-  -v "concat(', nupkg-', translate(@id, '.', '-'), ' (>= ', @version, ')')" \
-  -b \
-  -b \
-  -o '"' \
-  $pkg.nuspec`
-  eval `xmlstarlet sel -T -t -o 'libmonodeps="' \
-  --if //_:dependencies/_:group[@targetFramework="'$fwk_name'"] \
-  -m //_:dependencies/_:group[@targetFramework="'$fwk_name'"]/_:dependency \
-  -v "concat(', libmono-', translate(@id, '.', '-'), ' (>= ', @version, ')')" \
-  -b \
-  --elif "//_:dependencies/_:group[not(@targetFramework)]" \
-  -m "//_:dependencies/_:group[not(@targetFramework)]/_:dependency" \
-  -v "concat(', libmono-', translate(@id, '.', '-'), ' (>= ', @version, ')')" \
-  -b \
-  --else \
-  -m //_:dependencies/_:dependency \
-  -v "concat(', libmono-', translate(@id, '.', '-'), ' (>= ', @version, ')')" \
-  -b \
-  -b \
-  -o '"' \
-  $pkg.nuspec`
+    echo "Finding dependencies for $fwk_name"
 
-  nupkgdeps=`echo $nupkgdeps | tr A-Z a-z`
-  nupkgdeps=`echo $nupkgdeps | sed 's/>= \[\([\.0-9]\+\)\]/= \1/g'`
-  nupkgdeps=`echo $nupkgdeps | sed 's/>= [(]\([\.0-9]\+\),[)]/>> \1/g'`
-  nupkgdeps=`echo $nupkgdeps | sed 's/>= [(],\([\.0-9]\+\)[)]/<< \1/g'`
-  nupkgdeps=`echo $nupkgdeps | sed 's/>= [(],\([\.0-9]\+\)\]/<= \1/g'`
-  nupkgdeps="\${misc:Depends}$nupkgdeps"
-  libmonodeps=`echo $libmonodeps | tr A-Z a-z`
-  libmonodeps=`echo $libmonodeps | sed 's/>= \[\([\.0-9]\+\)\]/= \1/g'`
-  libmonodeps=`echo $libmonodeps | sed 's/>= [(]\([\.0-9]\+\),[)]/>> \1/g'`
-  libmonodeps=`echo $libmonodeps | sed 's/>= [(],\([\.0-9]\+\)[)]/<< \1/g'`
-  libmonodeps=`echo $libmonodeps | sed 's/>= [(],\([\.0-9]\+\)\]/<= \1/g'`
-  libmonodeps="\${misc:Depends}, mono-runtime (>=$mono_version)$libmonodeps"
+    eval `xmlstarlet sel -T -t -o 'nupkgdeps="' \
+    --if //_:dependencies/_:group[@targetFramework="'$fwk_name'"] \
+    -m //_:dependencies/_:group[@targetFramework="'$fwk_name'"]/_:dependency \
+    -v "concat(', nupkg-', translate(@id, '.', '-'), ' (>= ', @version, ')')" \
+    -b \
+    --elif "//_:dependencies/_:group[not(@targetFramework)]" \
+    -m "//_:dependencies/_:group[not(@targetFramework)]/_:dependency" \
+    -v "concat(', nupkg-', translate(@id, '.', '-'), ' (>= ', @version, ')')" \
+    -b \
+    --else \
+    -m //_:dependencies/_:dependency \
+    -v "concat(', nupkg-', translate(@id, '.', '-'), ' (>= ', @version, ')')" \
+    -b \
+    -b \
+    -o '"' \
+    ../$pkg.nuspec`
+    eval `xmlstarlet sel -T -t -o 'libmonodeps="' \
+    --if //_:dependencies/_:group[@targetFramework="'$fwk_name'"] \
+    -m //_:dependencies/_:group[@targetFramework="'$fwk_name'"]/_:dependency \
+    -v "concat(', libmono-', translate(@id, '.', '-'), ' (>= ', @version, ')')" \
+    -b \
+    --elif "//_:dependencies/_:group[not(@targetFramework)]" \
+    -m "//_:dependencies/_:group[not(@targetFramework)]/_:dependency" \
+    -v "concat(', libmono-', translate(@id, '.', '-'), ' (>= ', @version, ')')" \
+    -b \
+    --else \
+    -m //_:dependencies/_:dependency \
+    -v "concat(', libmono-', translate(@id, '.', '-'), ' (>= ', @version, ')')" \
+    -b \
+    -b \
+    -o '"' \
+    ../$pkg.nuspec`
 
-  echo "Nupkg Dependencies: $nupkgdeps"
-  echo "libmono Dependencies: $libmonodeps"
+    echo
+    echo Depends: $nupkgdeps
+    echo
+    nupkgdeps=`echo $nupkgdeps | tr A-Z a-z`
+    nupkgdeps=`echo $nupkgdeps | sed 's/>= \[\([\.0-9]\+\)\]/= \1/g'`
+    nupkgdeps=`echo $nupkgdeps | sed 's/>= [(]\([\.0-9]\+\),[)]/>> \1/g'`
+    nupkgdeps=`echo $nupkgdeps | sed 's/>= [(],\([\.0-9]\+\)[)]/<< \1/g'`
+    nupkgdeps=`echo $nupkgdeps | sed 's/>= [(],\([\.0-9]\+\)\]/<= \1/g'`
+    nupkgdeps="\${misc:Depends}$nupkgdeps"
+    libmonodeps=`echo $libmonodeps | tr A-Z a-z`
+    libmonodeps=`echo $libmonodeps | sed 's/>= \[\([\.0-9]\+\)\]/= \1/g'`
+    libmonodeps=`echo $libmonodeps | sed 's/>= [(]\([\.0-9]\+\),[)]/>> \1/g'`
+    libmonodeps=`echo $libmonodeps | sed 's/>= [(],\([\.0-9]\+\)[)]/<< \1/g'`
+    libmonodeps=`echo $libmonodeps | sed 's/>= [(],\([\.0-9]\+\)\]/<= \1/g'`
+    libmonodeps="\${misc:Depends}, mono-runtime (>=$mono_version)$libmonodeps"
 
-  cd deb
+    echo "* nupkg dependencies: $nupkgdeps"
+    echo "* libmono dependencies: $libmonodeps"
+
+  fi
 
   pkgname=`echo $pkg | tr A-Z a-z | tr \. -`
   debname=nupkg-$pkgname
