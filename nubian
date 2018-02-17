@@ -294,7 +294,7 @@ Maintainer: `git config user.name` <`git config user.email`>
 Homepage: $nuget_url
 Standards-Version: 3.9.6
 
-Package: $debname
+Package: $debname-$nuget_version
 Architecture: all
 Depends: $nupkgdeps
 Description: debianized $pkg nuget package
@@ -326,7 +326,7 @@ EOF
 EOF
   chmod +x debian/rules
 
-  cat >debian/$debname.install <<EOF
+  cat >debian/$debname-$nuget_version.install <<EOF
 #! /usr/bin/dh-exec
 usr
 EOF
