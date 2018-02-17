@@ -172,8 +172,10 @@ create_deb()
   mkdir -p opt/mono/lib
   LIBPATHS="net462 net461 net46
             net452 net451
-            net45 Net45 portable-windows8+net45
-            net40 Net40
+            net45 Net45 portable-windows8+net45 net45-full
+            net40 Net40 net40-client net40-full
+            net35-client net35-full
+            net10-full net11-full net20-full
             netstandard2.0
             netstandard1.4
             netstandard1.3
