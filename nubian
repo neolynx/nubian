@@ -156,17 +156,11 @@ create_deb()
     return 1
   fi
 
-  eval `xmlstarlet sel -t \
-    -o 'nuget_version="'     -v "/_:package/_:metadata/_:version"     -o '" ' \
-    -o 'nuget_url="'         -v "/_:package/_:metadata/_:projectUrl"  -o '" ' \
-    -o 'nuget_description="' -v "/_:package/_:metadata/_:description" -o '" ' \
-    -o 'nuget_summary="'      -v "/_:package/_:metadata/_:summary"     -o '" ' \
-    <$pkg.nuspec`
-
-  echo "* Nuget version:     $nuget_version"
-  echo "* Nuget summary:     $nuget_summary"
-  echo "* Nuget description: $nuget_description"
-  echo "* Nuget url:         $nuget_url"
+  metadata="/*[local-name() = 'package']/*[local-name() = 'metadata']/*[local-name()"
+  nuget_version=`    xmlstarlet sel -t -v "$metadata = 'version']"     < $pkg.nuspec || echo unknown`
+  nuget_url=`        xmlstarlet sel -t -v "$metadata = 'projectUrl']"  < $pkg.nuspec || echo unknown`
+  nuget_description=`xmlstarlet sel -t -v "$metadata = 'description']" < $pkg.nuspec || true`
+  nuget_summary=`    xmlstarlet sel -t -v "$metadata = 'summary']"     < $pkg.nuspec || true`
 
   echo "* Copying files ..."
   mkdir deb
@@ -349,15 +343,13 @@ EOF
 create_git()
 {
   echo "* Building git repository ..."
-  git init .
-  git add .
-  git commit -m "debianize" >/dev/null
-  git tag -a "v$(echo $nuget_version | tr '~' '-')" -m "$debname: release $nuget_version"
-  git bundle create $OUTDIR/nuget-${pkgname}_$nuget_version.git master --branches --tags
-  echo Git repository nuget-${pkgname}_$nuget_version.git is ready
-  echo
-  echo "Clone it with 'git clone -b master nuget-${pkgname}_$nuget_version.git nuget-${pkgname}_$nuget_version'"
-  echo
+  git init . >/dev/null 2>&1
+  git add . >/dev/null 2>&1
+  git commit -m "debianize" >/dev/null 2>&1
+  git tag -a "v$(echo $nuget_version | tr '~' '-')" -m "$debname: release $nuget_version" >/dev/null 2>&1
+  git bundle create $OUTDIR/nuget-${pkgname}_$nuget_version.git master --branches --tags >/dev/null 2>&1
+  echo "git repository nuget-${pkgname}_$nuget_version.git is ready"
+  echo "clone it with 'git clone -b master nuget-${pkgname}_$nuget_version.git nuget-${pkgname}_$nuget_version'"
 }
 
 build_deb()
@@ -393,5 +385,6 @@ case $action in
     ;;
 esac
 
+echo
 rm -rf $dir
 
