@@ -122,9 +122,7 @@ setup_nuget()
     pkgsource="https://api.nuget.org/v3/index.json"
   fi
 
-  echo Creating debian package of $pkg $pkgver
-
-  echo "* downloading and extracting ..."
+  echo "* downloading and extracting $pkg $pkgver"
   mkdir pkg
   nuget install $pkg -Version $pkgver -OutputDirectory pkg/ >/dev/null 2>&1
   if [ $? -ne 0 ]; then
@@ -146,15 +144,11 @@ create_deb()
 {
   pkg=$1
   pkgver=$2
-  echo
-  echo =============================================
-  echo Extracting: $pkg $pkgver
-  echo =============================================
   tempdir=`mktemp -d XXXXXXX`
   cd $tempdir
 
   pkgname="$pkg.$pkgver.nupkg"
-  unzip "../$pkg.$pkgver/$pkgname" "$pkg.nuspec"
+  unzip "../$pkg.$pkgver/$pkgname" "$pkg.nuspec" >/dev/null 2>&1
   if [ $? -ne 0 ]; then
     echo "\nError unzipping `pwd`/../$pkg.$pkgver/$pkgname" >&2
     return 1
@@ -188,7 +182,6 @@ create_deb()
             netstandard1.0"
   mono_version="4.2.1"
   libs_found=0
-  tree ../../$pkg.$pkgver
   for libpath in $LIBPATHS
   do
     path="../../$pkg.$pkgver/lib/$libpath"
@@ -212,6 +205,7 @@ create_deb()
 
   if [ "$libs_found" -eq 0 ]; then
     echo "Warning: no libs found"
+    tree ../..
   fi
 
   mkdir -p usr/share/nupkg/
@@ -224,8 +218,6 @@ create_deb()
     if [ -z "$fwk_name" ]; then
      get_fallbackMatch $pkg
     fi
-
-  echo "Finding dependencies for $fwk_name"
 
     echo "Finding dependencies for $fwk_name"
 
@@ -285,7 +277,7 @@ create_deb()
 
   pkgname=`echo $pkg | tr A-Z a-z | tr \. -`
   debname=nupkg-$pkgname
-  nuget_description=`echo $nuget_description\n$nuget_summary | fmt --width=80 | sed 's/^/ /'`
+  nuget_description=`echo "$nuget_description\n$nuget_summary" | fmt --width=80 | sed 's/^/ /'`
 
   mkdir -p debian/source
   echo "3.0 (git)" > debian/source/format
@@ -378,7 +370,6 @@ OUTDIR=`pwd`
 dir=`mktemp -d`
 cd $dir
 echo "* Working dir: $dir"
-
 action=`echo $action | tr - _`
 case $action in
   deb)
