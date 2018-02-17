@@ -108,6 +108,8 @@ setup_nuget()
   pkgver="$2"
   pkgsource="$3"
 
+  libs_found=0
+
   if [ -z "$pkg" ]; then
     echo Error: Please specify a NUGET_ID
     usage
@@ -169,53 +171,54 @@ create_deb()
   echo "* Copying files ..."
   mkdir deb
   cd deb
-  mkdir -p opt/mono/lib
-  LIBPATHS="net462 net461 net46
-            net452 net451
-            net45 Net45 portable-windows8+net45 net45-full
-            net40 Net40 net40-client net40-full
-            net35-client net35-full
-            net10-full net11-full net20-full
-            netstandard2.0
-            netstandard1.4
-            netstandard1.3
-            netstandard1.2
-            netstandard1.1
-            netstandard1.0"
-  mono_version="4.2.1"
-  libs_found=0
-  for libpath in $LIBPATHS
-  do
-    path="../../$pkg.$pkgver/lib/$libpath"
-    if [ -d "$path" -a ! -f "$path/_._" ]; then
-      echo "Using assemblies found in $path"
-      get_frameworkName $libpath $pkg
-      cp -r $path/* opt/mono/lib
-      rm -f opt/mono/lib/_._
-      case $libpath in
-        netstandard1.4|netstandard1.3|netstandard1.2|net462|net47|net461|net46)
-          mono_version="4.6.0"
-          ;;
-        netstandard2.0)
-          mono_version="4.8.0"
-          ;;
-      esac
-      libs_found=1
-      break
-    fi
-  done
-
-  if [ "$libs_found" -eq 0 ]; then
-    echo "Warning: no libs found"
-    tree ../..
-  fi
 
   mkdir -p usr/share/nupkg/
-
   cp "../../$pkg.$pkgver/$pkgname" usr/share/nupkg/
 
+  if ! xmlstarlet sel -t -c "$metadata = 'dependencies']" < ../$pkg.nuspec >/dev/null; then
+    echo "Warning: no dependencies found"
+  else
+    mkdir -p opt/mono/lib
+    LIBPATHS="net462 net461 net46
+              net452 net451
+              net45 Net45 portable-windows8+net45 net45-full
+              net40 Net40 net40-client net40-full
+              net35-client net35-full
+              net20-full 20
+              net10-full net11-full
+              netstandard2.0
+              netstandard1.4
+              netstandard1.3
+              netstandard1.2
+              netstandard1.1
+              netstandard1.0"
+    mono_version="4.2.1"
+    for libpath in $LIBPATHS
+    do
+      path="../../$pkg.$pkgver/lib/$libpath"
+      if [ -d "$path" -a ! -f "$path/_._" ]; then
+        echo "Using assemblies found in $path"
+        get_frameworkName $libpath $pkg
+        cp -r $path/* opt/mono/lib
+        rm -f opt/mono/lib/_._
+        case $libpath in
+          netstandard1.4|netstandard1.3|netstandard1.2|net462|net47|net461|net46)
+            mono_version="4.6.0"
+            ;;
+          netstandard2.0)
+            mono_version="4.8.0"
+            ;;
+        esac
+        libs_found=1
+        break
+      fi
+    done
 
-  if [ -f "$pkg.nuspec" ]; then
+    if [ "$libs_found" -eq 0 ]; then
+      echo "Warning: no libs found"
+      tree ../..
+    fi
+
     echo "* Framework: $fwk_name"
     if [ -z "$fwk_name" ]; then
      get_fallbackMatch $pkg
@@ -274,12 +277,11 @@ create_deb()
 
     echo "* nupkg dependencies: $nupkgdeps"
     echo "* libmono dependencies: $libmonodeps"
-
   fi
 
   pkgname=`echo $pkg | tr A-Z a-z | tr \. -`
   debname=nupkg-$pkgname
-  nuget_description=`echo "$nuget_description\n$nuget_summary" | fmt --width=80 | sed 's/^/ /'`
+  nuget_description=`echo "$nuget_description\n$nuget_summary" | fmt --width=80 | sed 's/^$/./' | sed 's/^/ /'`
 
   mkdir -p debian/source
   echo "3.0 (git)" > debian/source/format
