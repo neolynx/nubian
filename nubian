@@ -166,8 +166,9 @@ create_deb()
   mkdir deb
   cd deb
 
-  mkdir -p usr/share/nupkg/
+  mkdir -p usr/share/nupkg usr/share/doc/$pkg
   cp "../../$pkg.$pkgver/$pkgname" usr/share/nupkg/
+  cp ../$pkg.nuspec usr/share/doc/$pkg/${pkg}_$pkgver.nuspec
 
   if ! xmlstarlet sel -t -c "$metadata = 'dependencies']" < ../$pkg.nuspec >/dev/null; then
     echo "Warning: no dependencies found"
