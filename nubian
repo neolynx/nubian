@@ -21,6 +21,26 @@ if [ -z "$action" ]; then
 fi
 shift
 
+log_info()
+{
+  /bin/echo -e "\e[36m\e[1mI: $@\e[0m"
+}
+
+log_notice()
+{
+  /bin/echo -e "\e[32m\e[1mN: $@\e[0m"
+}
+
+log_warn()
+{
+  /bin/echo -e "\e[33m\e[1mW: $@\e[0m"
+}
+
+log_error()
+{
+  /bin/echo -e "\e[31m\e[1mE: $@\e[0m"
+}
+
 get_frameworkName()
 {
   if [[ $1 = "net40" || $1 = "Net40" ]]; then
@@ -56,7 +76,7 @@ get_frameworkName()
 
 get_fallbackMatch()
 {
-    echo "Getting fallback framework name"
+    log_warn "Getting fallback framework name"
 
     eval `xmlstarlet sel -T -t -o 'fwk_name="' \
     --if "//_:dependencies/_:group[contains(@targetFramework, '.NETFramework4')]" \
@@ -82,7 +102,7 @@ nubian_bulkconvert()
   ver4_regex="(.*)/(.+)\.([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\.nupkg"
 
   folder="$1"
-  echo "Bulk converting $folder"
+  log_info "Bulk converting $folder"
 
   for nupkg in $(find $folder -type f -name '*.nupkg')
   do
@@ -90,14 +110,12 @@ nubian_bulkconvert()
     then
       pkg="${BASH_REMATCH[2]}"
       pkgver="${BASH_REMATCH[3]}"
-      echo "$pkg"
-      echo "$pkgver"
 
-      echo "Converting $pkg $pkgver"
+      log_info "Converting $pkg $pkgver"
       setup_nuget $pkg $pkgver $folder &
       sleep 5
     else
-      echo "Considered $nupkg, but was not a match"
+      log_info "Considered $nupkg, but was not a match"
     fi
   done
 }
@@ -111,12 +129,12 @@ setup_nuget()
   libs_found=0
 
   if [ -z "$pkg" ]; then
-    echo Error: Please specify a NUGET_ID
+    log_error Error: Please specify a NUGET_ID
     usage
   fi
 
   if [ -z "$pkgver" ]; then
-    echo Error: Please specify a package version
+    log_error Error: Please specify a package version
     usage
   fi
 
@@ -124,11 +142,10 @@ setup_nuget()
     pkgsource="https://api.nuget.org/v3/index.json"
   fi
 
-  echo "* downloading and extracting $pkg $pkgver"
   mkdir pkg
   nuget install $pkg -Version $pkgver -OutputDirectory pkg/ >/dev/null 2>&1
   if [ $? -ne 0 ]; then
-    echo "\nError downloading $pkgurl" >&2
+    log_error "\nError downloading $pkgurl" >&2
     exit 1
   fi
 
@@ -146,13 +163,16 @@ create_deb()
 {
   pkg=$1
   pkgver=$2
+
+  log_info "* Converting nuget $pkg $pkgver"
+
   tempdir=`mktemp -d XXXXXXX`
   cd $tempdir
 
   pkgname="$pkg.$pkgver.nupkg"
   unzip "../$pkg.$pkgver/$pkgname" "$pkg.nuspec" >/dev/null 2>&1
   if [ $? -ne 0 ]; then
-    echo "\nError unzipping `pwd`/../$pkg.$pkgver/$pkgname" >&2
+    log_error "Error unzipping `pwd`/../$pkg.$pkgver/$pkgname" >&2
     return 1
   fi
 
@@ -162,7 +182,6 @@ create_deb()
   nuget_description=`xmlstarlet sel -t -v "$metadata = 'description']" < $pkg.nuspec || true`
   nuget_summary=`    xmlstarlet sel -t -v "$metadata = 'summary']"     < $pkg.nuspec || true`
 
-  echo "* Copying files ..."
   mkdir deb
   cd deb
 
@@ -192,7 +211,7 @@ create_deb()
     do
       path="../../$pkg.$pkgver/lib/$libpath"
       if [ -d "$path" -a ! -f "$path/_._" ]; then
-        echo "Using assemblies found in $path"
+        log_info "Using assemblies found in $path"
         get_frameworkName $libpath $pkg
         cp -r $path/* opt/mono/lib
         rm -f opt/mono/lib/_._
@@ -210,16 +229,16 @@ create_deb()
     done
 
     if [ "$libs_found" -eq 0 ]; then
-      echo "Warning: no libs found"
+      log_warn "Warning: no libs found"
       tree ../..
     fi
 
-    echo "* Framework: $fwk_name"
+    log_info "* Framework: $fwk_name"
     if [ -z "$fwk_name" ]; then
      get_fallbackMatch $pkg
     fi
 
-    echo "Finding dependencies for $fwk_name"
+    log_info "Finding dependencies for $fwk_name"
 
     eval `xmlstarlet sel -T -t -o 'nupkgdeps="' \
     --if //_:dependencies/_:group[@targetFramework="'$fwk_name'"] \
@@ -237,6 +256,7 @@ create_deb()
     -b \
     -o '"' \
     ../$pkg.nuspec`
+
     eval `xmlstarlet sel -T -t -o 'libmonodeps="' \
     --if //_:dependencies/_:group[@targetFramework="'$fwk_name'"] \
     -m //_:dependencies/_:group[@targetFramework="'$fwk_name'"]/_:dependency \
@@ -254,9 +274,6 @@ create_deb()
     -o '"' \
     ../$pkg.nuspec`
 
-    echo
-    echo Depends: $nupkgdeps
-    echo
     nupkgdeps=`echo $nupkgdeps | tr A-Z a-z`
     nupkgdeps=`echo $nupkgdeps | sed 's/>= \[\([\.0-9]\+\)\]/= \1/g'`
     nupkgdeps=`echo $nupkgdeps | sed 's/>= [(]\([\.0-9]\+\),[)]/>> \1/g'`
@@ -270,8 +287,8 @@ create_deb()
     libmonodeps=`echo $libmonodeps | sed 's/>= [(],\([\.0-9]\+\)\]/<= \1/g'`
     libmonodeps="\${misc:Depends}, mono-runtime (>=$mono_version)$libmonodeps"
 
-    echo "* nupkg dependencies: $nupkgdeps"
-    echo "* libmono dependencies: $libmonodeps"
+    log_info "* nupkg dependencies: $nupkgdeps"
+    log_info "* libmono dependencies: $libmonodeps"
   fi
 
   pkgname=`echo $pkg | tr A-Z a-z | tr \. -`
@@ -294,7 +311,7 @@ Standards-Version: 3.9.6
 Package: $debname-$nuget_version
 Architecture: all
 Depends: $nupkgdeps
-Description: debianized $pkg nuget package
+Description: debianized nuget package $pkg
 $nuget_description
 EOF
   if [ "$libs_found" -eq 1 ]; then
@@ -343,30 +360,24 @@ EOF
 
 create_git()
 {
-  echo "* Building git repository ..."
   git init . >/dev/null 2>&1
   git add . >/dev/null 2>&1
   git commit -m "debianize" >/dev/null 2>&1
   git tag -a "v$(echo $nuget_version | tr '~' '-')" -m "$debname: release $nuget_version" >/dev/null 2>&1
   git bundle create $OUTDIR/nuget-${pkgname}_$nuget_version.git master --branches --tags >/dev/null 2>&1
-  echo "git repository nuget-${pkgname}_$nuget_version.git is ready"
-  echo "clone it with 'git clone -b master nuget-${pkgname}_$nuget_version.git nuget-${pkgname}_$nuget_version'"
+  log_notice "git repository nuget-${pkgname}_$nuget_version.git is ready"
 }
 
 build_deb()
 {
-  echo "* Building debian package ..."
-
   debuild -uc -us -b
-
   cp ../*.deb $OUTDIR/
-  echo Packages ${debname}_${nuget_version}_all.deb and libmono-${pkgname}_${nuget_version}_all.deb are ready
+  log_notice Packages ${debname}_${nuget_version}_all.deb and libmono-${pkgname}_${nuget_version}_all.deb are ready
 }
 
 OUTDIR=`pwd`
 dir=`mktemp -d`
 cd $dir
-echo "* Working dir: $dir"
 action=`echo $action | tr - _`
 case $action in
   deb)
@@ -381,7 +392,7 @@ case $action in
     nubian_$action $@
     ;;
   *)
-    echo "Unknown action: $action"
+    log_error "Unknown action: $action"
     usage
     ;;
 esac
