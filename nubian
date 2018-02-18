@@ -171,8 +171,8 @@ create_deb()
   cp ../$pkg.nuspec usr/share/doc/$pkg/${pkg}_$pkgver.nuspec
 
   if ! xmlstarlet sel -t -c "$metadata = 'dependencies']" < ../$pkg.nuspec >/dev/null; then
-    echo "Warning: no dependencies found"
-  else
+    log_warn "Warning: no dependencies found"
+  elif false; then #FIXME: dependencies disabled
     mkdir -p opt/mono/lib
     LIBPATHS="net462 net461 net46
               net452 net451
