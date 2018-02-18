@@ -133,13 +133,13 @@ setup_nuget()
   fi
 
   cd pkg
-  for p in *
-  do
-    t=`ls $p/*nupkg | perl -pe 's|.*/(.*?)\.([0-9\.]+).nupkg|\1:\2|g'`
-    pkg=`echo $t | cut -d: -f1`
-    pkgver=`echo $t | cut -d: -f2`
+  #for p in *
+  #do
+  #  t=`ls $p/*nupkg | perl -pe 's|.*/(.*?)\.([0-9\.]+).nupkg|\1:\2|g'`
+  #  pkg=`echo $t | cut -d: -f1`
+  #  pkgver=`echo $t | cut -d: -f2`
     create_deb $pkg $pkgver
-  done
+  #done
 }
 
 create_deb()
